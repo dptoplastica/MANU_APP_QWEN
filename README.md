@@ -100,32 +100,59 @@ Si Supabase no está disponible (por ejemplo, sin conexión a internet o sin eje
 ## Estructura del proyecto
 
 ```
-src/
-├── App.tsx                    # Router principal
-├── main.tsx                   # Punto de entrada
-├── index.css                  # Estilos globales
-├── types/
-│   └── index.ts              # Tipos TypeScript
-├── data/
-│   └── seed.ts               # Datos de demostración
-├── contexts/
-│   └── AppContext.tsx         # Estado global
-├── components/
-│   └── Layout.tsx             # Layout con sidebar
-└── pages/
-    ├── Login.tsx              # Página de login
-    ├── Dashboard.tsx          # Panel principal
-    ├── Subjects.tsx           # Materias
-    ├── GroupsStudents.tsx     # Grupos y alumnos
-    ├── Gradebook.tsx          # Cuaderno del profesor
-    ├── LearningSituations.tsx # Situaciones de aprendizaje
-    ├── Activities.tsx         # Actividades
-    ├── EvaluationsCompetencies.tsx # Evaluaciones y competencias
-    ├── Reports.tsx            # Informes PDF
-    ├── Programmes.tsx         # Programaciones didácticas
-    ├── Admin.tsx              # Panel de administración
-    └── Settings.tsx           # Configuración
+├── src/
+│   ├── App.tsx                    # Router principal
+│   ├── main.tsx                   # Punto de entrada
+│   ├── index.css                  # Estilos globales
+│   ├── vite-env.d.ts              # Tipos de Vite
+│   ├── types/
+│   │   └── index.ts              # Tipos TypeScript
+│   ├── data/
+│   │   └── seed.ts               # Datos de demostración
+│   ├── lib/
+│   │   └── supabase.ts           # Cliente de Supabase
+│   ├── services/
+│   │   ├── dataService.ts        # Servicio de datos unificado
+│   │   └── initializeSupabase.ts # Script de inicialización
+│   ├── contexts/
+│   │   └── AppContext.tsx         # Estado global
+│   ├── components/
+│   │   ├── Layout.tsx             # Layout con sidebar
+│   │   └── LoadingScreen.tsx      # Pantalla de carga
+│   └── pages/
+│       ├── Login.tsx              # Página de login
+│       ├── Dashboard.tsx          # Panel principal
+│       ├── Subjects.tsx           # Materias
+│       ├── GroupsStudents.tsx     # Grupos y alumnos
+│       ├── Gradebook.tsx          # Cuaderno del profesor
+│       ├── LearningSituations.tsx # Situaciones de aprendizaje
+│       ├── Activities.tsx         # Actividades
+│       ├── EvaluationsCompetencies.tsx # Evaluaciones y competencias
+│       ├── Reports.tsx            # Informes PDF
+│       ├── Programmes.tsx         # Programaciones didácticas
+│       ├── Admin.tsx              # Panel de administración
+│       ├── Settings.tsx           # Configuración
+│       └── SetupGuide.tsx         # Guía de configuración
+├── supabase/
+│   ├── schema.sql                 # Schema de la base de datos
+│   └── seed.sql                   # Datos iniciales
+├── .env                           # Variables de entorno
+├── .env.example                   # Ejemplo de variables
+├── GUIA_CONFIGURACION_SUPABASE.md # Guía detallada de configuración
+└── README.md                      # Este archivo
 ```
+
+## Archivos importantes
+
+### Para configurar Supabase:
+- **`GUIA_CONFIGURACION_SUPABASE.md`** — Guía paso a paso detallada
+- **`supabase/schema.sql`** — Script para crear las tablas
+- **`supabase/seed.sql`** — Script para crear los datos iniciales
+
+### Para desarrollo:
+- **`src/services/dataService.ts`** — Servicio que conecta con Supabase o usa datos locales
+- **`src/contexts/AppContext.tsx`** — Estado global de la aplicación
+- **`src/data/seed.ts`** — Datos de demostración (funcionan sin Supabase)
 
 ## Despliegue en Vercel
 

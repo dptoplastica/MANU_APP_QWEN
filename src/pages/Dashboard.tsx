@@ -5,7 +5,7 @@ import { school, subjects, groups, teacherSubjectGroups, allActivities, allLearn
 import { BookOpen, Users, Calendar, TrendingUp, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export const Dashboard: React.FC = () => {
-  const { currentUser, grades } = useApp();
+  const { currentUser, grades, supabaseConnected } = useApp();
 
   const myAssignments = teacherSubjectGroups.filter(tsg => tsg.teacherId === currentUser?.id);
   const mySubjectIds = [...new Set(myAssignments.map(a => a.subjectId))];
@@ -31,6 +31,22 @@ export const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Setup Banner */}
+      {!supabaseConnected && currentUser?.role === 'admin' && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-yellow-800">Supabase no está configurado</p>
+            <p className="text-xs text-yellow-700 mt-1">
+              La aplicación funciona en modo demo local. Para persistir datos, configura Supabase siguiendo la guía.
+            </p>
+            <Link to="/setup" className="inline-flex items-center gap-1 mt-2 text-xs font-medium text-yellow-800 hover:text-yellow-900 underline">
+              Ver guía de configuración →
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* Welcome */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-6 text-white">
         <h1 className="text-2xl font-bold">Bienvenido/a, {currentUser?.name}</h1>

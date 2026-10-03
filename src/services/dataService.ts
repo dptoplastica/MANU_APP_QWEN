@@ -185,7 +185,7 @@ export const localDataService = {
 export const supabaseDataService = {
   async getSubjects(): Promise<Subject[]> {
     const { data, error } = await supabase.from('subjects').select('*');
-    if (error) return seed.subjects;
+    if (error || !data || data.length === 0) return seed.subjects;
     return data.map((s: any) => ({
       id: s.id,
       name: s.name,
@@ -199,7 +199,7 @@ export const supabaseDataService = {
 
   async getGroups(): Promise<Group[]> {
     const { data, error } = await supabase.from('groups').select('*');
-    if (error) return seed.groups;
+    if (error || !data || data.length === 0) return seed.groups;
     return data.map((g: any) => ({
       id: g.id,
       name: g.name,
@@ -210,7 +210,7 @@ export const supabaseDataService = {
 
   async getStudents(): Promise<Student[]> {
     const { data, error } = await supabase.from('students').select('*');
-    if (error) return seed.students;
+    if (error || !data || data.length === 0) return seed.students;
     return data.map((s: any) => ({
       id: s.id,
       firstName: s.first_name,
@@ -222,7 +222,7 @@ export const supabaseDataService = {
 
   async getGrades(): Promise<Grade[]> {
     const { data, error } = await supabase.from('grades').select('*');
-    if (error) return localDataService.generateInitialGrades();
+    if (error || !data || data.length === 0) return localDataService.generateInitialGrades();
     return data.map((g: any) => ({
       id: g.id,
       studentId: g.student_id,
@@ -236,7 +236,8 @@ export const supabaseDataService = {
   },
 
   async updateGrade(grade: Grade): Promise<void> {
-    const { error } = await supabase
+    // Intentar actualizar
+    const { error: updateError } = await supabase
       .from('grades')
       .update({
         score: grade.score,
@@ -248,8 +249,24 @@ export const supabaseDataService = {
       })
       .eq('id', grade.id);
     
-    if (error) {
-      console.warn('Error updating grade in Supabase:', error.message);
+    // Si no existe, intentar insertar
+    if (updateError) {
+      const { error: insertError } = await supabase
+        .from('grades')
+        .insert({
+          id: grade.id,
+          student_id: grade.studentId,
+          activity_id: grade.activityId,
+          score: grade.score,
+          observation: grade.observation,
+          not_completed: grade.notCompleted,
+          not_evaluated: grade.notEvaluated,
+          recovery: grade.recovery
+        });
+      
+      if (insertError) {
+        console.warn('Error persisting grade:', insertError.message);
+      }
     }
   },
 
@@ -259,12 +276,50 @@ export const supabaseDataService = {
       .select('*')
       .eq('teacher_id', teacherId);
     
-    if (error) return seed.teacherSubjectGroups.filter(tsg => tsg.teacherId === teacherId);
+    if (error || !data || data.length === 0) {
+      return seed.teacherSubjectGroups.filter(tsg => tsg.teacherId === teacherId);
+    }
     return data.map((t: any) => ({
       id: t.id,
       teacherId: t.teacher_id,
       subjectId: t.subject_id,
       groupId: t.group_id
+    }));
+  },
+
+  async getKeyCompetencies() {
+    const { data, error } = await supabase.from('key_competencies').select('*');
+    if (error || !data || data.length === 0) return seed.keyCompetencies;
+    return data.map((k: any) => ({
+      id: k.id,
+      code: k.code,
+      name: k.name,
+      description: k.description || ''
+    }));
+  },
+
+  async getSpecificCompetencies() {
+    const { data, error } = await supabase.from('specific_competencies').select('*');
+    if (error || !data || data.length === 0) return seed.allSpecificCompetencies;
+    return data.map((c: any) => ({
+      id: c.id,
+      code: c.code,
+      name: c.name,
+      description: c.description || '',
+      subjectId: c.subject_id,
+      keyCompetencyIds: [] // Se cargarán por separado si es necesario
+    }));
+  },
+
+  async getEvaluationCriteria() {
+    const { data, error } = await supabase.from('evaluation_criteria').select('*');
+    if (error || !data || data.length === 0) return seed.allEvaluationCriteria;
+    return data.map((c: any) => ({
+      id: c.id,
+      code: c.code,
+      description: c.description,
+      specificCompetencyId: c.specific_competency_id,
+      subjectId: c.subject_id
     }));
   }
 };
@@ -318,10 +373,23 @@ export const dataService = {
     return seed.teacherSubjectGroups.filter(tsg => tsg.teacherId === teacherId);
   },
 
+  // Datos curriculares (Supabase si disponible, sino seed)
+  async getKeyCompetencies() {
+    if (useSupabase) return supabaseDataService.getKeyCompetencies();
+    return seed.keyCompetencies;
+  },
+
+  async getSpecificCompetencies() {
+    if (useSupabase) return supabaseDataService.getSpecificCompetencies();
+    return seed.allSpecificCompetencies;
+  },
+
+  async getEvaluationCriteria() {
+    if (useSupabase) return supabaseDataService.getEvaluationCriteria();
+    return seed.allEvaluationCriteria;
+  },
+
   // Datos estáticos (siempre del seed por ahora)
-  getKeyCompetencies: () => seed.keyCompetencies,
-  getSpecificCompetencies: () => seed.allSpecificCompetencies,
-  getEvaluationCriteria: () => seed.allEvaluationCriteria,
   getBasicKnowledge: () => seed.basicKnowledgeItems,
   getLearningSituations: () => seed.allLearningSituations,
   getActivities: () => seed.allActivities,

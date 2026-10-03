@@ -25,6 +25,7 @@ const navItems = [
   { path: '/informes', label: 'Informes', icon: FileText },
   { path: '/alumnos', label: 'Alumnos', icon: Users },
   { path: '/configuracion', label: 'Configuración', icon: Settings },
+  { path: '/setup', label: 'Guía de configuración', icon: Shield },
 ];
 
 const adminItems = [

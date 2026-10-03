@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider, useApp } from './contexts/AppContext';
 import { Layout } from './components/Layout';
+import { LoadingScreen } from './components/LoadingScreen';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { Subjects, SubjectDetail } from './pages/Subjects';
@@ -14,15 +15,20 @@ import { Reports } from './pages/Reports';
 import { Programmes } from './pages/Programmes';
 import { Admin } from './pages/Admin';
 import { SettingsPage } from './pages/Settings';
+import { SetupGuide } from './pages/SetupGuide';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated } = useApp();
+  const { isAuthenticated, isLoading } = useApp();
+  
+  if (isLoading) return <LoadingScreen />;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   return <Layout>{children}</Layout>;
 };
 
 const AppRoutes: React.FC = () => {
-  const { isAuthenticated } = useApp();
+  const { isAuthenticated, isLoading } = useApp();
+
+  if (isLoading) return <LoadingScreen />;
 
   return (
     <Routes>
@@ -44,6 +50,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/informes" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
       <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
       <Route path="/configuracion" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+      <Route path="/setup" element={<ProtectedRoute><SetupGuide /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
