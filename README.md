@@ -1,0 +1,2 @@
+# MANU_APP_QWEN
+App Educativa LOMLOE
