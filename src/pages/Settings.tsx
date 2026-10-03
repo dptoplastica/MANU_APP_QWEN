@@ -120,12 +120,20 @@ export const SettingsPage: React.FC = () => {
             <p className="font-medium text-gray-800">Supabase (PostgreSQL)</p>
           </div>
           <div className="p-3 bg-gray-50 rounded-lg">
-            <p className="text-gray-500">Backend</p>
-            <p className="font-medium text-gray-800">API REST + RLS</p>
+            <p className="text-gray-500">Estado</p>
+            <p className="font-medium text-green-700">✓ Conectado a Supabase</p>
           </div>
           <div className="p-3 bg-gray-50 rounded-lg">
             <p className="text-gray-500">Frontend</p>
             <p className="font-medium text-gray-800">React + TypeScript + Tailwind</p>
+          </div>
+          <div className="p-3 bg-gray-50 rounded-lg">
+            <p className="text-gray-500">Supabase URL</p>
+            <p className="font-medium text-gray-800 text-xs truncate">sbymwyxjuxhkilwcxoed.supabase.co</p>
+          </div>
+          <div className="p-3 bg-gray-50 rounded-lg">
+            <p className="text-gray-500">Tipo de clave</p>
+            <p className="font-medium text-gray-800">Publishable key (sb_publishable)</p>
           </div>
         </div>
       </div>

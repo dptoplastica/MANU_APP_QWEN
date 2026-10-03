@@ -62,30 +62,40 @@ La aplicación estará disponible en `http://localhost:5173`
 
 ## Configuración de Supabase
 
-### 1. Crear proyecto en Supabase
+La aplicación está conectada a una instancia real de Supabase:
 
-1. Ir a [supabase.com](https://supabase.com) y crear una cuenta
-2. Crear un nuevo proyecto
-3. Anotar la URL del proyecto y la clave `anon` (pública)
+- **URL:** `https://sbymwyxjuxhkilwcxoed.supabase.co`
+- **Clave:** Publishable key (`sb_publishable_...`)
 
-### 2. Configurar variables de entorno
+### 1. Crear la base de datos
 
-Editar `.env`:
+Ejecutar el SQL del archivo `supabase/schema.sql` en el editor SQL de Supabase:
+1. Ir a [Supabase Dashboard](https://supabase.com/dashboard/project/sbymwyxjuxhkilwcxoed)
+2. Ir a SQL Editor
+3. Copiar y pegar el contenido de `supabase/schema.sql`
+4. Ejecutar
+
+### 2. Variables de entorno
+
+Las variables están configuradas en `.env`:
 
 ```
-VITE_SUPABASE_URL=https://tu-proyecto.supabase.co
-VITE_SUPABASE_ANON_KEY=tu-clave-anon
+VITE_SUPABASE_URL=https://sbymwyxjuxhkilwcxoed.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_71LSjFpKhUgVS0vMTFb-aQ_v6WZ43kG
 ```
 
-### 3. Crear la base de datos
+> **Nota:** Supabase está migrando de las claves `anon` a las nuevas `publishable keys` (sb_publishable_...). Ambas funcionan igual en el frontend.
 
-Ejecutar el SQL del archivo `supabase/schema.sql` en el editor SQL de Supabase.
-
-### 4. Configurar autenticación
+### 3. Configurar autenticación
 
 En Supabase → Authentication → Settings:
 - Habilitar "Email" como proveedor
 - Desactivar "Confirm email" para pruebas
+- Crear usuarios manualmente en Authentication → Users
+
+### 4. Modo fallback
+
+Si Supabase no está disponible (por ejemplo, sin conexión a internet o sin ejecutar el schema), la aplicación funciona automáticamente en **modo demo local** con datos ficticios precargados. El indicador de estado en la barra lateral muestra si está conectado a Supabase o en modo local.
 
 ## Estructura del proyecto
 

@@ -11,14 +11,23 @@ export const Login: React.FC = () => {
   const { login } = useApp();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    const success = login(email, password);
-    if (success) {
-      navigate('/dashboard');
-    } else {
-      setError('Credenciales incorrectas. Inténtelo de nuevo.');
+    setIsSubmitting(true);
+    try {
+      const success = await login(email, password);
+      if (success) {
+        navigate('/dashboard');
+      } else {
+        setError('Credenciales incorrectas. Inténtelo de nuevo.');
+      }
+    } catch {
+      setError('Error al iniciar sesión. Inténtelo de nuevo.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -81,9 +90,10 @@ export const Login: React.FC = () => {
 
             <button
               type="submit"
-              className="w-full py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg"
+              disabled={isSubmitting}
+              className="w-full py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Acceder
+              {isSubmitting ? 'Conectando...' : 'Acceder'}
             </button>
           </form>
 

@@ -32,15 +32,15 @@ const adminItems = [
 ];
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { currentUser, logout, notifications } = useApp();
+  const { currentUser, logout, notifications, supabaseConnected } = useApp();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const unreadNotifications = notifications.filter(n => !n.read && n.userId === currentUser?.id);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/login');
   };
 
@@ -110,6 +110,12 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
           {/* Footer */}
           <div className="p-4 border-t border-gray-200">
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <span className={`w-2 h-2 rounded-full ${supabaseConnected ? 'bg-green-500' : 'bg-yellow-500'}`}></span>
+              <p className="text-xs text-gray-400">
+                {supabaseConnected ? 'Supabase conectado' : 'Modo demo local'}
+              </p>
+            </div>
             <p className="text-xs text-gray-400 text-center">Curso 2026/2027</p>
           </div>
         </div>
