@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useApp } from '../contexts/AppContext';
 import * as seed from '../data/seed';
 import { User, Subject, Group, Student, TeacherSubjectGroup } from '../types';
-import { Shield, Users, BookOpen, GraduationCap, Link2, Calendar, Plus, Edit, Trash2, X, Save } from 'lucide-react';
+import { Shield, Users, BookOpen, GraduationCap, Link2, Calendar, Plus, Edit, Trash2, X, Save, Upload, FileText, Download } from 'lucide-react';
 
 export const Admin: React.FC = () => {
   const { currentUser } = useApp();
@@ -20,6 +20,13 @@ export const Admin: React.FC = () => {
   const [modalType, setModalType] = useState<'edit' | 'create'>('create');
   const [editingItem, setEditingItem] = useState<any>(null);
   const [formData, setFormData] = useState<any>({});
+  
+  // Estados para importación CSV
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [csvData, setCsvData] = useState<Array<{nombre: string; apellidos: string; grupo: string}>>([]);
+  const [csvErrors, setCsvErrors] = useState<string[]>([]);
+  const [selectedGroupForImport, setSelectedGroupForImport] = useState<string>('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (currentUser?.role !== 'admin') {
     return (
@@ -129,6 +136,129 @@ export const Admin: React.FC = () => {
 
   const handleToggleActive = (id: string) => {
     setUsersList(usersList.map(u => u.id === id ? { ...u, active: !u.active } : u));
+  };
+
+  // Funciones para importación CSV
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      parseCSV(text);
+    };
+    reader.readAsText(file);
+  };
+
+  const parseCSV = (text: string) => {
+    const lines = text.split('\n').filter(line => line.trim());
+    const errors: string[] = [];
+    const data: Array<{nombre: string; apellidos: string; grupo: string}> = [];
+
+    if (lines.length < 2) {
+      errors.push('El archivo CSV debe tener al menos una cabecera y una fila de datos');
+      setCsvErrors(errors);
+      setCsvData([]);
+      return;
+    }
+
+    // Detectar separador (coma, punto y coma, tabulación)
+    const firstLine = lines[0];
+    let separator = ',';
+    if (firstLine.includes(';')) separator = ';';
+    else if (firstLine.includes('\t')) separator = '\t';
+
+    // Parsear cabecera
+    const headers = lines[0].split(separator).map(h => h.trim().toLowerCase());
+    
+    // Buscar índices de columnas
+    const nombreIdx = headers.findIndex(h => h.includes('nombre') || h.includes('name'));
+    const apellidosIdx = headers.findIndex(h => h.includes('apellido') || h.includes('surname') || h.includes('last'));
+    const grupoIdx = headers.findIndex(h => h.includes('grupo') || h.includes('group') || h.includes('clase'));
+
+    if (nombreIdx === -1) {
+      errors.push('No se encontró la columna "nombre" en el CSV');
+    }
+    if (apellidosIdx === -1) {
+      errors.push('No se encontró la columna "apellidos" en el CSV');
+    }
+
+    if (errors.length > 0) {
+      setCsvErrors(errors);
+      setCsvData([]);
+      return;
+    }
+
+    // Parsear datos
+    for (let i = 1; i < lines.length; i++) {
+      const columns = lines[i].split(separator).map(c => c.trim());
+      
+      if (columns.length < Math.max(nombreIdx, apellidosIdx) + 1) {
+        errors.push(`Línea ${i + 1}: formato incorrecto`);
+        continue;
+      }
+
+      const nombre = columns[nombreIdx] || '';
+      const apellidos = columns[apellidosIdx] || '';
+      const grupo = grupoIdx !== -1 ? columns[grupoIdx] || '' : '';
+
+      if (!nombre || !apellidos) {
+        errors.push(`Línea ${i + 1}: nombre y apellidos son obligatorios`);
+        continue;
+      }
+
+      data.push({ nombre, apellidos, grupo });
+    }
+
+    setCsvErrors(errors);
+    setCsvData(data);
+  };
+
+  const handleImportCSV = () => {
+    if (csvData.length === 0) return;
+
+    const newStudents: Student[] = csvData.map((row, index) => {
+      // Buscar grupo por nombre o usar el seleccionado
+      let groupId = selectedGroupForImport;
+      
+      if (row.grupo && !selectedGroupForImport) {
+        const foundGroup = groupsList.find(g => 
+          g.name.toLowerCase().includes(row.grupo.toLowerCase()) ||
+          row.grupo.toLowerCase().includes(g.name.toLowerCase())
+        );
+        if (foundGroup) {
+          groupId = foundGroup.id;
+        }
+      }
+
+      return {
+        id: `student-imported-${Date.now()}-${index}`,
+        firstName: row.nombre,
+        lastName: row.apellidos,
+        groupId: groupId || groupsList[0]?.id || '',
+        observations: 'Importado desde CSV'
+      };
+    });
+
+    setStudentsList([...studentsList, ...newStudents]);
+    setShowImportModal(false);
+    setCsvData([]);
+    setCsvErrors([]);
+    setSelectedGroupForImport('');
+    
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const downloadCSVTemplate = () => {
+    const template = 'nombre,apellidos,grupo\nLucía,Fernández,1º Bachillerato A\nMartín,García,1º Bachillerato A\nSofía,Rodríguez,1º Bachillerato B';
+    const blob = new Blob([template], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'plantilla_alumnos.csv';
+    link.click();
   };
 
   return (
@@ -351,12 +481,20 @@ export const Admin: React.FC = () => {
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
           <div className="p-4 border-b border-gray-100 flex items-center justify-between">
             <h2 className="font-semibold text-gray-800">Alumnos ({studentsList.length})</h2>
-            <button 
-              onClick={() => openCreateModal('student')}
-              className="flex items-center gap-1 px-3 py-1.5 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700"
-            >
-              <Plus className="w-4 h-4" /> Añadir
-            </button>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => setShowImportModal(true)}
+                className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700"
+              >
+                <Upload className="w-4 h-4" /> Importar CSV
+              </button>
+              <button 
+                onClick={() => openCreateModal('student')}
+                className="flex items-center gap-1 px-3 py-1.5 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700"
+              >
+                <Plus className="w-4 h-4" /> Añadir
+              </button>
+            </div>
           </div>
           <div className="overflow-x-auto max-h-96">
             <table className="w-full text-sm">
@@ -727,6 +865,189 @@ export const Admin: React.FC = () => {
               >
                 <Save className="w-4 h-4" />
                 {modalType === 'create' ? 'Crear' : 'Guardar cambios'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Importación CSV */}
+      {showImportModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800">Importar alumnos desde CSV</h3>
+                <p className="text-sm text-gray-500 mt-1">Sube un archivo CSV con la lista de alumnos</p>
+              </div>
+              <button onClick={() => {
+                setShowImportModal(false);
+                setCsvData([]);
+                setCsvErrors([]);
+                setSelectedGroupForImport('');
+                if (fileInputRef.current) fileInputRef.current.value = '';
+              }} className="p-1 hover:bg-gray-100 rounded">
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              {/* Instrucciones */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 className="font-medium text-blue-900 mb-2 flex items-center gap-2">
+                  <FileText className="w-4 h-4" /> Formato del archivo CSV
+                </h4>
+                <p className="text-sm text-blue-800 mb-2">
+                  El archivo CSV debe tener las siguientes columnas (la cabecera es obligatoria):
+                </p>
+                <code className="block bg-blue-100 text-blue-900 px-3 py-2 rounded text-xs font-mono mb-2">
+                  nombre,apellidos,grupo
+                </code>
+                <p className="text-xs text-blue-700">
+                  • Separadores aceptados: coma (,), punto y coma (;) o tabulación<br/>
+                  • La columna "grupo" es opcional (se puede asignar manualmente abajo)<br/>
+                  • Se detectarán automáticamente los nombres de columnas similares
+                </p>
+                <button
+                  onClick={downloadCSVTemplate}
+                  className="mt-3 flex items-center gap-2 px-3 py-1.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                >
+                  <Download className="w-3 h-3" /> Descargar plantilla de ejemplo
+                </button>
+              </div>
+
+              {/* Input de archivo */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Seleccionar archivo CSV</label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-green-400 transition-colors">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".csv,text/csv"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    id="csv-file-input"
+                  />
+                  <label htmlFor="csv-file-input" className="cursor-pointer">
+                    <Upload className="w-10 h-10 text-gray-400 mx-auto mb-2" />
+                    <p className="text-sm text-gray-600">
+                      <span className="font-medium text-green-600">Haz clic para seleccionar</span> o arrastra un archivo CSV
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">Formato: .csv</p>
+                  </label>
+                </div>
+              </div>
+
+              {/* Errores */}
+              {csvErrors.length > 0 && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <h4 className="font-medium text-red-800 mb-2">Errores encontrados:</h4>
+                  <ul className="list-disc list-inside text-sm text-red-700 space-y-1">
+                    {csvErrors.map((error, idx) => (
+                      <li key={idx}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Vista previa de datos */}
+              {csvData.length > 0 && (
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-medium text-gray-800">
+                      Vista previa ({csvData.length} alumnos encontrados)
+                    </h4>
+                  </div>
+
+                  {/* Selector de grupo por defecto */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Grupo por defecto (si no se especifica en el CSV)
+                    </label>
+                    <select
+                      value={selectedGroupForImport}
+                      onChange={e => setSelectedGroupForImport(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                    >
+                      <option value="">Detectar automáticamente del CSV</option>
+                      {groupsList.map(group => (
+                        <option key={group.id} value={group.id}>{group.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Tabla de vista previa */}
+                  <div className="border border-gray-200 rounded-lg overflow-hidden max-h-64 overflow-y-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50 sticky top-0">
+                        <tr>
+                          <th className="text-left py-2 px-3 font-medium text-gray-700">#</th>
+                          <th className="text-left py-2 px-3 font-medium text-gray-700">Nombre</th>
+                          <th className="text-left py-2 px-3 font-medium text-gray-700">Apellidos</th>
+                          <th className="text-left py-2 px-3 font-medium text-gray-700">Grupo</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {csvData.map((row, idx) => {
+                          const matchedGroup = row.grupo 
+                            ? groupsList.find(g => 
+                                g.name.toLowerCase().includes(row.grupo.toLowerCase()) ||
+                                row.grupo.toLowerCase().includes(g.name.toLowerCase())
+                              )
+                            : null;
+                          
+                          return (
+                            <tr key={idx} className="border-t border-gray-100">
+                              <td className="py-2 px-3 text-gray-500">{idx + 1}</td>
+                              <td className="py-2 px-3 text-gray-800">{row.nombre}</td>
+                              <td className="py-2 px-3 text-gray-800">{row.apellidos}</td>
+                              <td className="py-2 px-3">
+                                {row.grupo ? (
+                                  matchedGroup ? (
+                                    <span className="text-green-700 text-xs">{matchedGroup.name}</span>
+                                  ) : (
+                                    <span className="text-orange-600 text-xs">
+                                      "{row.grupo}" (no encontrado)
+                                    </span>
+                                  )
+                                ) : (
+                                  <span className="text-gray-400 text-xs">
+                                    {selectedGroupForImport 
+                                      ? groupsList.find(g => g.id === selectedGroupForImport)?.name 
+                                      : 'Sin asignar'}
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowImportModal(false);
+                  setCsvData([]);
+                  setCsvErrors([]);
+                  setSelectedGroupForImport('');
+                  if (fileInputRef.current) fileInputRef.current.value = '';
+                }}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleImportCSV}
+                disabled={csvData.length === 0}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Upload className="w-4 h-4" />
+                Importar {csvData.length > 0 ? `${csvData.length} alumnos` : ''}
               </button>
             </div>
           </div>
