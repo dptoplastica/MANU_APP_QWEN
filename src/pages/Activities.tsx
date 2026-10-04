@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
 import { useApp } from '../contexts/AppContext';
-import { subjects, groups, allActivities, allLearningSituations, teacherSubjectGroups, allEvaluationCriteria, allSpecificCompetencies } from '../data/seed';
-import { Activity, Plus, Filter, Calendar, Target } from 'lucide-react';
+import { subjects, groups, allLearningSituations, teacherSubjectGroups, allEvaluationCriteria, allSpecificCompetencies, basicKnowledgeItems } from '../data/seed';
+import { Activity as ActivityIcon, Plus, Filter, Calendar, Target, Edit, X, Save } from 'lucide-react';
+import { Activity } from '../types';
 
 export const ActivitiesPage: React.FC = () => {
-  const { currentUser } = useApp();
+  const { currentUser, activities, updateActivity } = useApp();
   const myAssignments = teacherSubjectGroups.filter(tsg => tsg.teacherId === currentUser?.id);
   const mySubjectIds = [...new Set(myAssignments.map(a => a.subjectId))];
-  const myActivities = allActivities.filter(a => mySubjectIds.includes(a.subjectId));
+  const myActivities = activities.filter(a => mySubjectIds.includes(a.subjectId));
 
   const [filterSubject, setFilterSubject] = useState<string>('all');
   const [filterPeriod, setFilterPeriod] = useState<string>('all');
   const [showForm, setShowForm] = useState(false);
+  const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
+  const [editForm, setEditForm] = useState<Partial<Activity>>({});
 
   const filteredActivities = myActivities.filter(a => {
     if (filterSubject !== 'all' && a.subjectId !== filterSubject) return false;
@@ -37,6 +40,31 @@ export const ActivitiesPage: React.FC = () => {
     digital: 'bg-cyan-100 text-cyan-700',
     final_product: 'bg-orange-100 text-orange-700',
     recovery: 'bg-red-100 text-red-700'
+  };
+
+  const openEditModal = (activity: Activity) => {
+    setEditingActivity(activity);
+    setEditForm({ ...activity });
+  };
+
+  const closeEditModal = () => {
+    setEditingActivity(null);
+    setEditForm({});
+  };
+
+  const handleSaveEdit = () => {
+    if (editingActivity && editForm) {
+      updateActivity({ ...editingActivity, ...editForm } as Activity);
+      closeEditModal();
+    }
+  };
+
+  const toggleArrayItem = (field: 'criterionIds' | 'basicKnowledgeIds', itemId: string) => {
+    const currentArray = editForm[field] || [];
+    const newArray = currentArray.includes(itemId)
+      ? currentArray.filter(id => id !== itemId)
+      : [...currentArray, itemId];
+    setEditForm({ ...editForm, [field]: newArray });
   };
 
   return (
@@ -156,7 +184,7 @@ export const ActivitiesPage: React.FC = () => {
             <div key={activity.id} className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 hover:border-blue-200 transition-colors">
               <div className="flex items-start gap-4">
                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${typeColors[activity.type] || 'bg-gray-100'}`}>
-                  <Activity className="w-5 h-5" />
+                  <ActivityIcon className="w-5 h-5" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
@@ -171,6 +199,13 @@ export const ActivitiesPage: React.FC = () => {
                       <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">
                         {activity.evaluationPeriod}ª Eval.
                       </span>
+                      <button
+                        onClick={() => openEditModal(activity)}
+                        className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="Editar"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-3 mt-2 text-xs text-gray-500">
@@ -197,8 +232,203 @@ export const ActivitiesPage: React.FC = () => {
 
       {filteredActivities.length === 0 && (
         <div className="text-center py-12 text-gray-400">
-          <Activity className="w-12 h-12 mx-auto mb-3 opacity-50" />
+          <ActivityIcon className="w-12 h-12 mx-auto mb-3 opacity-50" />
           <p>No se encontraron actividades con los filtros seleccionados</p>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {editingActivity && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full my-8">
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white rounded-t-xl z-10">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800">Editar Actividad</h3>
+                <p className="text-sm text-gray-500">{editingActivity.name}</p>
+              </div>
+              <button onClick={closeEditModal} className="p-1 hover:bg-gray-100 rounded">
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+              {/* Información básica */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                  <input
+                    type="text"
+                    value={editForm.name || ''}
+                    onChange={e => setEditForm({ ...editForm, name: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+                  <select
+                    value={editForm.type || 'theoretical'}
+                    onChange={e => setEditForm({ ...editForm, type: e.target.value as any })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  >
+                    {Object.entries(typeLabels).map(([key, label]) => (
+                      <option key={key} value={key}>{label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
+                  <input
+                    type="date"
+                    value={editForm.date || ''}
+                    onChange={e => setEditForm({ ...editForm, date: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Evaluación</label>
+                  <select
+                    value={editForm.evaluationPeriod || '1'}
+                    onChange={e => setEditForm({ ...editForm, evaluationPeriod: e.target.value as any })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="1">1ª Evaluación</option>
+                    <option value="2">2ª Evaluación</option>
+                    <option value="3">3ª Evaluación</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Sesiones</label>
+                  <input
+                    type="number"
+                    value={editForm.sessions || 1}
+                    onChange={e => setEditForm({ ...editForm, sessions: parseInt(e.target.value) || 1 })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    min="1"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Peso (%)</label>
+                  <input
+                    type="number"
+                    value={editForm.weight || 0}
+                    onChange={e => setEditForm({ ...editForm, weight: parseFloat(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    min="0"
+                    max="100"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Puntuación máxima</label>
+                  <input
+                    type="number"
+                    value={editForm.maxScore || 10}
+                    onChange={e => setEditForm({ ...editForm, maxScore: parseFloat(e.target.value) || 10 })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    min="1"
+                    max="10"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Instrumento de evaluación</label>
+                  <input
+                    type="text"
+                    value={editForm.evaluationInstrument || ''}
+                    onChange={e => setEditForm({ ...editForm, evaluationInstrument: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    placeholder="Ej: Rúbrica, prueba práctica, etc."
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                <textarea
+                  value={editForm.description || ''}
+                  onChange={e => setEditForm({ ...editForm, description: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Observaciones</label>
+                <textarea
+                  value={editForm.observations || ''}
+                  onChange={e => setEditForm({ ...editForm, observations: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  rows={2}
+                />
+              </div>
+
+              {/* Criterios de evaluación */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Criterios de evaluación</label>
+                <div className="flex flex-wrap gap-2">
+                  {allEvaluationCriteria
+                    .filter(c => c.subjectId === editingActivity.subjectId)
+                    .map(c => {
+                      const isSelected = editForm.criterionIds?.includes(c.id);
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => toggleArrayItem('criterionIds', c.id)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                            isSelected
+                              ? 'bg-green-600 text-white'
+                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          }`}
+                        >
+                          {c.code}
+                        </button>
+                      );
+                    })}
+                </div>
+              </div>
+
+              {/* Saberes básicos */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Saberes básicos</label>
+                <div className="flex flex-wrap gap-2">
+                  {basicKnowledgeItems
+                    .filter(bk => bk.subjectId === editingActivity.subjectId)
+                    .map(bk => {
+                      const isSelected = editForm.basicKnowledgeIds?.includes(bk.id);
+                      return (
+                        <button
+                          key={bk.id}
+                          type="button"
+                          onClick={() => toggleArrayItem('basicKnowledgeIds', bk.id)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                            isSelected
+                              ? 'bg-purple-600 text-white'
+                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          }`}
+                        >
+                          {bk.code}
+                        </button>
+                      );
+                    })}
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-6 border-t border-gray-200 flex justify-end gap-3 sticky bottom-0 bg-white rounded-b-xl">
+              <button
+                onClick={closeEditModal}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                <Save className="w-4 h-4" />
+                Guardar cambios
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
