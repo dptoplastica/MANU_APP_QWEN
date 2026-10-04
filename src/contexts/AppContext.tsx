@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, Grade, CriterionAssessment, CompetencyAssessment, Report, Notification } from '../types';
+import { User, Grade, CriterionAssessment, CompetencyAssessment, Report, Notification, LearningSituation } from '../types';
 import { dataService } from '../services/dataService';
 import * as seed from '../data/seed';
 
@@ -9,6 +9,7 @@ interface AppState {
   isLoading: boolean;
   supabaseConnected: boolean;
   grades: Grade[];
+  learningSituations: LearningSituation[];
   criterionAssessments: CriterionAssessment[];
   competencyAssessments: CompetencyAssessment[];
   reports: Report[];
@@ -16,6 +17,7 @@ interface AppState {
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   updateGrade: (grade: Grade) => Promise<void>;
+  updateLearningSituation: (sda: LearningSituation) => void;
   addReport: (report: Report) => void;
   markNotificationRead: (id: string) => void;
 }
@@ -28,6 +30,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [isLoading, setIsLoading] = useState(true);
   const [supabaseConnected, setSupabaseConnected] = useState(false);
   const [grades, setGrades] = useState<Grade[]>([]);
+  const [learningSituations, setLearningSituations] = useState<LearningSituation[]>(seed.allLearningSituations);
   const [criterionAssessments] = useState<CriterionAssessment[]>([]);
   const [competencyAssessments] = useState<CompetencyAssessment[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
@@ -109,6 +112,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
+  const updateLearningSituation = (updatedSDA: LearningSituation) => {
+    setLearningSituations(prev => prev.map(s => s.id === updatedSDA.id ? updatedSDA : s));
+  };
+
   const addReport = (report: Report) => {
     setReports(prev => [...prev, report]);
   };
@@ -124,6 +131,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       isLoading,
       supabaseConnected,
       grades,
+      learningSituations,
       criterionAssessments,
       competencyAssessments,
       reports,
@@ -131,6 +139,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       login,
       logout,
       updateGrade,
+      updateLearningSituation,
       addReport,
       markNotificationRead
     }}>

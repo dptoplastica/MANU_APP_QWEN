@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../contexts/AppContext';
-import { allLearningSituations, subjects, allActivities, allSpecificCompetencies, allEvaluationCriteria, keyCompetencies, teacherSubjectGroups } from '../data/seed';
-import { Target, ArrowLeft, Activity, BookOpen, CheckCircle } from 'lucide-react';
+import { subjects, allActivities, allSpecificCompetencies, allEvaluationCriteria, keyCompetencies, teacherSubjectGroups, basicKnowledgeItems } from '../data/seed';
+import { Target, ArrowLeft, Activity, BookOpen, CheckCircle, Edit, X, Save, Plus } from 'lucide-react';
+import { LearningSituation } from '../types';
 
 export const LearningSituations: React.FC = () => {
-  const { currentUser } = useApp();
+  const { currentUser, learningSituations, updateLearningSituation } = useApp();
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
+  const [editingSDA, setEditingSDA] = useState<LearningSituation | null>(null);
+  const [editForm, setEditForm] = useState<Partial<LearningSituation>>({});
   
   const myAssignments = teacherSubjectGroups.filter(tsg => tsg.teacherId === currentUser?.id);
   const mySubjectIds = [...new Set(myAssignments.map(a => a.subjectId))];
   const mySubjects = subjects.filter(s => mySubjectIds.includes(s.id));
-  const mySDAs = allLearningSituations.filter(s => mySubjectIds.includes(s.subjectId));
+  const mySDAs = learningSituations.filter(s => mySubjectIds.includes(s.subjectId));
 
   // Filtrar SDA por materia seleccionada
   const filteredSDAs = selectedSubject === 'all' 
@@ -30,6 +33,31 @@ export const LearningSituations: React.FC = () => {
     'sub-dt1': { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-200' },
     'sub-podcast': { bg: 'bg-purple-100', text: 'text-purple-700', border: 'border-purple-200' },
     'sub-corto': { bg: 'bg-orange-100', text: 'text-orange-700', border: 'border-orange-200' }
+  };
+
+  const openEditModal = (sda: LearningSituation) => {
+    setEditingSDA(sda);
+    setEditForm({ ...sda });
+  };
+
+  const closeEditModal = () => {
+    setEditingSDA(null);
+    setEditForm({});
+  };
+
+  const handleSaveEdit = () => {
+    if (editingSDA && editForm) {
+      updateLearningSituation({ ...editingSDA, ...editForm } as LearningSituation);
+      closeEditModal();
+    }
+  };
+
+  const toggleArrayItem = (field: 'keyCompetencyIds' | 'specificCompetencyIds' | 'criterionIds' | 'basicKnowledgeIds', itemId: string) => {
+    const currentArray = editForm[field] || [];
+    const newArray = currentArray.includes(itemId)
+      ? currentArray.filter(id => id !== itemId)
+      : [...currentArray, itemId];
+    setEditForm({ ...editForm, [field]: newArray });
   };
 
   return (
@@ -82,13 +110,12 @@ export const LearningSituations: React.FC = () => {
               const colors = subjectColors[sda.subjectId] || { bg: 'bg-gray-100', text: 'text-gray-700', border: 'border-gray-200' };
               
               return (
-                <Link
+                <div
                   key={sda.id}
-                  to={`/situaciones-aprendizaje/${sda.id}`}
                   className="block p-4 border border-gray-100 rounded-lg hover:bg-gray-50 hover:border-blue-200 transition-all"
                 >
                   <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-3 flex-1">
+                    <Link to={`/situaciones-aprendizaje/${sda.id}`} className="flex items-start gap-3 flex-1">
                       <div className={`w-10 h-10 ${colors.bg} rounded-lg flex items-center justify-center flex-shrink-0`}>
                         <Target className={`w-5 h-5 ${colors.text}`} />
                       </div>
@@ -110,9 +137,16 @@ export const LearningSituations: React.FC = () => {
                           <span className="px-2 py-0.5 bg-orange-50 text-orange-700 text-xs rounded-full">{actCount} actividades</span>
                         </div>
                       </div>
-                    </div>
+                    </Link>
+                    <button
+                      onClick={(e) => { e.preventDefault(); openEditModal(sda); }}
+                      className="ml-2 p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      title="Editar"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
                   </div>
-                </Link>
+                </div>
               );
             })}
             {sdas.length === 0 && (
@@ -131,13 +165,288 @@ export const LearningSituations: React.FC = () => {
           <p className="text-gray-500">No hay situaciones de aprendizaje para esta materia</p>
         </div>
       )}
+
+      {/* Modal de edición */}
+      {editingSDA && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full my-8">
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white rounded-t-xl z-10">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800">Editar Situación de Aprendizaje</h3>
+                <p className="text-sm text-gray-500">{editingSDA.title}</p>
+              </div>
+              <button onClick={closeEditModal} className="p-1 hover:bg-gray-100 rounded">
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+              {/* Información básica */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Título</label>
+                  <input
+                    type="text"
+                    value={editForm.title || ''}
+                    onChange={e => setEditForm({ ...editForm, title: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Evaluación</label>
+                  <select
+                    value={editForm.evaluationPeriod || '1'}
+                    onChange={e => setEditForm({ ...editForm, evaluationPeriod: e.target.value as '1' | '2' | '3' })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="1">1ª Evaluación</option>
+                    <option value="2">2ª Evaluación</option>
+                    <option value="3">3ª Evaluación</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Temporalización</label>
+                  <input
+                    type="text"
+                    value={editForm.timing || ''}
+                    onChange={e => setEditForm({ ...editForm, timing: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    placeholder="Ej: Septiembre - Octubre"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Número de sesiones</label>
+                  <input
+                    type="number"
+                    value={editForm.sessions || 0}
+                    onChange={e => setEditForm({ ...editForm, sessions: parseInt(e.target.value) || 0 })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    min="1"
+                  />
+                </div>
+              </div>
+
+              {/* Textos largos */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Contextualización</label>
+                <textarea
+                  value={editForm.context || ''}
+                  onChange={e => setEditForm({ ...editForm, context: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  rows={2}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Justificación</label>
+                <textarea
+                  value={editForm.justification || ''}
+                  onChange={e => setEditForm({ ...editForm, justification: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  rows={2}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Producto final</label>
+                <textarea
+                  value={editForm.finalProduct || ''}
+                  onChange={e => setEditForm({ ...editForm, finalProduct: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  rows={2}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Objetivos</label>
+                <textarea
+                  value={editForm.objectives || ''}
+                  onChange={e => setEditForm({ ...editForm, objectives: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  rows={2}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Metodología</label>
+                <textarea
+                  value={editForm.methodology || ''}
+                  onChange={e => setEditForm({ ...editForm, methodology: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  rows={2}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Recursos</label>
+                <textarea
+                  value={editForm.resources || ''}
+                  onChange={e => setEditForm({ ...editForm, resources: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  rows={2}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Instrumentos de evaluación</label>
+                <textarea
+                  value={editForm.evaluationInstruments || ''}
+                  onChange={e => setEditForm({ ...editForm, evaluationInstruments: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  rows={2}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Atención a la diversidad</label>
+                  <textarea
+                    value={editForm.diversity || ''}
+                    onChange={e => setEditForm({ ...editForm, diversity: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    rows={2}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Medidas de refuerzo</label>
+                  <textarea
+                    value={editForm.reinforcementMeasures || ''}
+                    onChange={e => setEditForm({ ...editForm, reinforcementMeasures: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    rows={2}
+                  />
+                </div>
+              </div>
+
+              {/* Competencias clave */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Competencias clave</label>
+                <div className="flex flex-wrap gap-2">
+                  {keyCompetencies.map(kc => {
+                    const isSelected = editForm.keyCompetencyIds?.includes(kc.id);
+                    return (
+                      <button
+                        key={kc.id}
+                        type="button"
+                        onClick={() => toggleArrayItem('keyCompetencyIds', kc.id)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                          isSelected
+                            ? 'bg-indigo-600 text-white'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        {kc.code}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Competencias específicas */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Competencias específicas</label>
+                <div className="flex flex-wrap gap-2">
+                  {allSpecificCompetencies
+                    .filter(sc => sc.subjectId === editingSDA.subjectId)
+                    .map(sc => {
+                      const isSelected = editForm.specificCompetencyIds?.includes(sc.id);
+                      return (
+                        <button
+                          key={sc.id}
+                          type="button"
+                          onClick={() => toggleArrayItem('specificCompetencyIds', sc.id)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                            isSelected
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          }`}
+                        >
+                          {sc.code}: {sc.name}
+                        </button>
+                      );
+                    })}
+                </div>
+              </div>
+
+              {/* Criterios de evaluación */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Criterios de evaluación</label>
+                <div className="flex flex-wrap gap-2">
+                  {allEvaluationCriteria
+                    .filter(c => c.subjectId === editingSDA.subjectId)
+                    .map(c => {
+                      const isSelected = editForm.criterionIds?.includes(c.id);
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => toggleArrayItem('criterionIds', c.id)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                            isSelected
+                              ? 'bg-green-600 text-white'
+                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          }`}
+                        >
+                          {c.code}
+                        </button>
+                      );
+                    })}
+                </div>
+              </div>
+
+              {/* Saberes básicos */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Saberes básicos</label>
+                <div className="flex flex-wrap gap-2">
+                  {basicKnowledgeItems
+                    .filter(bk => bk.subjectId === editingSDA.subjectId)
+                    .map(bk => {
+                      const isSelected = editForm.basicKnowledgeIds?.includes(bk.id);
+                      return (
+                        <button
+                          key={bk.id}
+                          type="button"
+                          onClick={() => toggleArrayItem('basicKnowledgeIds', bk.id)}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                            isSelected
+                              ? 'bg-purple-600 text-white'
+                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          }`}
+                        >
+                          {bk.code}
+                        </button>
+                      );
+                    })}
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-6 border-t border-gray-200 flex justify-end gap-3 sticky bottom-0 bg-white rounded-b-xl">
+              <button
+                onClick={closeEditModal}
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSaveEdit}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                <Save className="w-4 h-4" />
+                Guardar cambios
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 export const LearningSituationDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const sda = allLearningSituations.find(s => s.id === id);
+  const { learningSituations } = useApp();
+  const sda = learningSituations.find(s => s.id === id);
   if (!sda) return <div className="text-center py-12 text-gray-500">Situación de aprendizaje no encontrada</div>;
 
   const subject = subjects.find(s => s.id === sda.subjectId);
