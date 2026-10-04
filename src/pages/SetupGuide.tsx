@@ -1,19 +1,49 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../contexts/AppContext';
-import { Database, CheckCircle, AlertCircle, ExternalLink, Copy, Check } from 'lucide-react';
+import { Database, CheckCircle, AlertCircle, ExternalLink, Copy, Check, Download, FileText, Eye, EyeOff } from 'lucide-react';
 
 export const SetupGuide: React.FC = () => {
   const { supabaseConnected } = useApp();
+  const [schemaContent, setSchemaContent] = useState<string>('');
+  const [seedContent, setSeedContent] = useState<string>('');
+  const [showSchema, setShowSchema] = useState(false);
+  const [showSeed, setShowSeed] = useState(false);
+  const [copiedStep, setCopiedStep] = useState<string | null>(null);
 
-  const copyToClipboard = (text: string) => {
+  useEffect(() => {
+    // Cargar los archivos SQL
+    fetch('/sql/schema.sql')
+      .then(r => r.text())
+      .then(setSchemaContent)
+      .catch(() => setSchemaContent('-- No se pudo cargar schema.sql'));
+
+    fetch('/sql/seed.sql')
+      .then(r => r.text())
+      .then(setSeedContent)
+      .catch(() => setSeedContent('-- No se pudo cargar seed.sql'));
+  }, []);
+
+  const copyToClipboard = (text: string, stepId: string) => {
     navigator.clipboard.writeText(text);
+    setCopiedStep(stepId);
+    setTimeout(() => setCopiedStep(null), 2000);
+  };
+
+  const downloadFile = (content: string, filename: string) => {
+    const blob = new Blob([content], { type: 'text/sql' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-800">Guía de configuración</h1>
-        <p className="text-sm text-gray-500 mt-1">Instrucciones para configurar Supabase</p>
+        <p className="text-sm text-gray-500 mt-1">Configura Supabase para persistir los datos</p>
       </div>
 
       {/* Connection Status */}
@@ -31,13 +61,51 @@ export const SetupGuide: React.FC = () => {
             <p className={`text-sm mt-1 ${supabaseConnected ? 'text-green-700' : 'text-yellow-700'}`}>
               {supabaseConnected
                 ? 'La aplicación está conectada a tu base de datos en Supabase. Los datos se persisten correctamente.'
-                : 'La aplicación está funcionando en modo demo local. Para persistir datos, configura Supabase siguiendo las instrucciones.'}
+                : 'La aplicación funciona en modo demo local. Para persistir datos, sigue los pasos siguientes.'}
             </p>
           </div>
         </div>
       </div>
 
-      {/* Configuration Steps */}
+      {/* Download SQL Files */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">
+        <h2 className="text-lg font-semibold text-blue-900 mb-3 flex items-center gap-2">
+          <Download className="w-5 h-5" /> Archivos SQL disponibles
+        </h2>
+        <p className="text-sm text-blue-800 mb-4">
+          Descarga los archivos SQL y cópialos en el SQL Editor de Supabase:
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <button
+            onClick={() => downloadFile(schemaContent, 'schema.sql')}
+            className="flex items-center gap-3 p-4 bg-white border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors text-left"
+          >
+            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Database className="w-5 h-5 text-blue-600" />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-gray-800 text-sm">schema.sql</p>
+              <p className="text-xs text-gray-500">Crea las tablas e índices</p>
+            </div>
+            <Download className="w-4 h-4 text-blue-600" />
+          </button>
+          <button
+            onClick={() => downloadFile(seedContent, 'seed.sql')}
+            className="flex items-center gap-3 p-4 bg-white border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors text-left"
+          >
+            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <FileText className="w-5 h-5 text-green-600" />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-gray-800 text-sm">seed.sql</p>
+              <p className="text-xs text-gray-500">Datos iniciales (materias, alumnos, etc.)</p>
+            </div>
+            <Download className="w-4 h-4 text-green-600" />
+          </button>
+        </div>
+      </div>
+
+      {/* Steps */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
         <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
           <Database className="w-5 h-5 text-blue-600" /> Pasos para configurar Supabase
@@ -46,9 +114,9 @@ export const SetupGuide: React.FC = () => {
         <div className="space-y-6">
           {/* Step 1 */}
           <div className="border-l-4 border-blue-500 pl-4">
-            <h3 className="font-semibold text-gray-800 mb-2">Paso 1: Ejecutar el schema SQL</h3>
+            <h3 className="font-semibold text-gray-800 mb-2">Paso 1: Abrir SQL Editor</h3>
             <p className="text-sm text-gray-600 mb-3">
-              Abre el SQL Editor en tu proyecto de Supabase y ejecuta el archivo <code className="bg-gray-100 px-2 py-0.5 rounded">supabase/schema.sql</code>
+              Abre el SQL Editor de tu proyecto de Supabase:
             </p>
             <a
               href="https://supabase.com/dashboard/project/sbymwyxjuxhkilwcxoed/sql/new"
@@ -56,118 +124,158 @@ export const SetupGuide: React.FC = () => {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
             >
-              <ExternalLink className="w-4 h-4" /> Abrir SQL Editor
+              <ExternalLink className="w-4 h-4" /> Abrir SQL Editor de Supabase
             </a>
           </div>
 
           {/* Step 2 */}
           <div className="border-l-4 border-blue-500 pl-4">
-            <h3 className="font-semibold text-gray-800 mb-2">Paso 2: Ejecutar el seed SQL</h3>
-            <p className="text-sm text-gray-600 mb-3">
-              Después del schema, ejecuta <code className="bg-gray-100 px-2 py-0.5 rounded">supabase/seed.sql</code> para crear los datos iniciales (materias, grupos, alumnos, competencias, criterios).
-            </p>
-            <div className="bg-gray-50 rounded-lg p-3">
-              <p className="text-xs text-gray-500 mb-2">Contenido del seed:</p>
-              <ul className="text-xs text-gray-600 space-y-1">
-                <li>• Centro educativo (IES Lope de Vega)</li>
-                <li>• 3 materias (Dibujo Técnico I, Taller de Podcast, Taller de Cortometraje)</li>
-                <li>• 3 grupos (1º Bach A, 1º Bach B, 2º Bach A)</li>
-                <li>• 24 alumnos ficticios</li>
-                <li>• 8 competencias clave LOMLOE</li>
-                <li>• Competencias específicas y criterios de evaluación para cada materia</li>
-              </ul>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-semibold text-gray-800">Paso 2: Ejecutar schema.sql</h3>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => copyToClipboard(schemaContent, 'schema')}
+                  className="flex items-center gap-1 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded"
+                >
+                  {copiedStep === 'schema' ? <Check className="w-3 h-3 text-green-600" /> : <Copy className="w-3 h-3" />}
+                  {copiedStep === 'schema' ? 'Copiado' : 'Copiar'}
+                </button>
+                <button
+                  onClick={() => downloadFile(schemaContent, 'schema.sql')}
+                  className="flex items-center gap-1 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded"
+                >
+                  <Download className="w-3 h-3" /> Descargar
+                </button>
+                <button
+                  onClick={() => setShowSchema(!showSchema)}
+                  className="flex items-center gap-1 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded"
+                >
+                  {showSchema ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                  {showSchema ? 'Ocultar' : 'Ver'}
+                </button>
+              </div>
             </div>
+            <p className="text-sm text-gray-600 mb-3">
+              Copia y pega este SQL en el editor, luego haz clic en <strong>Run</strong>. Crea todas las tablas necesarias.
+            </p>
+            {showSchema && (
+              <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto max-h-64 overflow-y-auto">
+                <pre className="text-xs text-green-400 font-mono whitespace-pre">{schemaContent}</pre>
+              </div>
+            )}
           </div>
 
           {/* Step 3 */}
           <div className="border-l-4 border-blue-500 pl-4">
-            <h3 className="font-semibold text-gray-800 mb-2">Paso 3: Crear usuarios en Authentication</h3>
-            <p className="text-sm text-gray-600 mb-3">
-              Ve a Authentication → Users en Supabase y crea los usuarios manualmente:
-            </p>
-            <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-              <div>
-                <p className="text-xs font-semibold text-gray-700 mb-1">Administrador:</p>
-                <div className="flex items-center gap-2">
-                  <code className="text-xs bg-white px-2 py-1 rounded border">admin@ieslopedevega.es</code>
-                  <button
-                    onClick={() => copyToClipboard('admin@ieslopedevega.es')}
-                    className="p-1 hover:bg-gray-200 rounded"
-                    title="Copiar"
-                  >
-                    <Copy className="w-3 h-3 text-gray-500" />
-                  </button>
-                </div>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-semibold text-gray-800">Paso 3: Ejecutar seed.sql</h3>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => copyToClipboard(seedContent, 'seed')}
+                  className="flex items-center gap-1 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded"
+                >
+                  {copiedStep === 'seed' ? <Check className="w-3 h-3 text-green-600" /> : <Copy className="w-3 h-3" />}
+                  {copiedStep === 'seed' ? 'Copiado' : 'Copiar'}
+                </button>
+                <button
+                  onClick={() => downloadFile(seedContent, 'seed.sql')}
+                  className="flex items-center gap-1 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded"
+                >
+                  <Download className="w-3 h-3" /> Descargar
+                </button>
+                <button
+                  onClick={() => setShowSeed(!showSeed)}
+                  className="flex items-center gap-1 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded"
+                >
+                  {showSeed ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                  {showSeed ? 'Ocultar' : 'Ver'}
+                </button>
               </div>
-              <div>
-                <p className="text-xs font-semibold text-gray-700 mb-1">Profesor:</p>
-                <div className="flex items-center gap-2">
-                  <code className="text-xs bg-white px-2 py-1 rounded border">profesor@ieslopedevega.es</code>
-                  <button
-                    onClick={() => copyToClipboard('profesor@ieslopedevega.es')}
-                    className="p-1 hover:bg-gray-200 rounded"
-                    title="Copiar"
-                  >
-                    <Copy className="w-3 h-3 text-gray-500" />
-                  </button>
-                </div>
-              </div>
-              <p className="text-xs text-gray-500 italic">
-                Establece una contraseña segura para cada usuario. Desactiva "Confirm email" en Authentication → Settings para pruebas.
-              </p>
             </div>
+            <p className="text-sm text-gray-600 mb-3">
+              Crea los datos iniciales: centro, materias, grupos, alumnos, competencias y criterios.
+            </p>
+            {showSeed && (
+              <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto max-h-64 overflow-y-auto">
+                <pre className="text-xs text-green-400 font-mono whitespace-pre">{seedContent}</pre>
+              </div>
+            )}
           </div>
 
           {/* Step 4 */}
           <div className="border-l-4 border-blue-500 pl-4">
-            <h3 className="font-semibold text-gray-800 mb-2">Paso 4: Crear perfiles en tabla users</h3>
+            <h3 className="font-semibold text-gray-800 mb-2">Paso 4: Crear usuarios</h3>
             <p className="text-sm text-gray-600 mb-3">
-              Después de crear los usuarios en Authentication, ejecuta este SQL para crear sus perfiles:
+              Ve a <strong>Authentication → Users</strong> en Supabase y crea estos usuarios:
             </p>
-            <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
-              <pre className="text-xs text-green-400 font-mono">
-{`-- Obtener los IDs de los usuarios creados
--- y crear sus perfiles en la tabla users
-
-INSERT INTO users (id, email, name, role, active)
-SELECT 
-  id,
-  email,
-  CASE 
-    WHEN email = 'admin@ieslopedevega.es' THEN 'Administrador del Centro'
-    WHEN email = 'profesor@ieslopedevega.es' THEN 'D. García López'
-  END as name,
-  CASE 
-    WHEN email = 'admin@ieslopedevega.es' THEN 'admin'
-    WHEN email = 'profesor@ieslopedevega.es' THEN 'teacher'
-  END as role,
-  true as active
-FROM auth.users
-WHERE email IN ('admin@ieslopedevega.es', 'profesor@ieslopedevega.es');`}
-              </pre>
+            <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold text-gray-700">Administrador:</p>
+                  <code className="text-xs bg-white px-2 py-1 rounded border">admin@ieslopedevega.es</code>
+                </div>
+                <button
+                  onClick={() => copyToClipboard('admin@ieslopedevega.es', 'admin-email')}
+                  className="p-1 hover:bg-gray-200 rounded"
+                >
+                  {copiedStep === 'admin-email' ? <Check className="w-3 h-3 text-green-600" /> : <Copy className="w-3 h-3 text-gray-500" />}
+                </button>
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-semibold text-gray-700">Profesor:</p>
+                  <code className="text-xs bg-white px-2 py-1 rounded border">profesor@ieslopedevega.es</code>
+                </div>
+                <button
+                  onClick={() => copyToClipboard('profesor@ieslopedevega.es', 'teacher-email')}
+                  className="p-1 hover:bg-gray-200 rounded"
+                >
+                  {copiedStep === 'teacher-email' ? <Check className="w-3 h-3 text-green-600" /> : <Copy className="w-3 h-3 text-gray-500" />}
+                </button>
+              </div>
+              <p className="text-xs text-gray-500 italic">
+                ✓ Marca "Auto Confirm User" al crearlos. Elige contraseñas seguras.
+              </p>
             </div>
           </div>
 
           {/* Step 5 */}
           <div className="border-l-4 border-blue-500 pl-4">
-            <h3 className="font-semibold text-gray-800 mb-2">Paso 5: Crear asignaciones profesor-materia-grupo</h3>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-semibold text-gray-800">Paso 5: Crear perfiles de usuario</h3>
+              <button
+                onClick={() => copyToClipboard(step5SQL, 'step5')}
+                className="flex items-center gap-1 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded"
+              >
+                {copiedStep === 'step5' ? <Check className="w-3 h-3 text-green-600" /> : <Copy className="w-3 h-3" />}
+                {copiedStep === 'step5' ? 'Copiado' : 'Copiar SQL'}
+              </button>
+            </div>
             <p className="text-sm text-gray-600 mb-3">
-              Ejecuta este SQL para asignar las materias al profesor:
+              Ejecuta este SQL para vincular los usuarios de Authentication con la tabla de perfiles:
             </p>
             <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
-              <pre className="text-xs text-green-400 font-mono">
-{`-- Asignar materias al profesor
-INSERT INTO teacher_subject_groups (teacher_id, subject_id, group_id)
-SELECT 
-  (SELECT id FROM users WHERE email = 'profesor@ieslopedevega.es'),
-  subject_id,
-  group_id
-FROM (VALUES
-  ('b0000000-0000-0000-0000-000000000001'::uuid, 'c0000000-0000-0000-0000-000000000001'::uuid), -- Dibujo Técnico I -> 1º Bach A
-  ('b0000000-0000-0000-0000-000000000002'::uuid, 'c0000000-0000-0000-0000-000000000001'::uuid), -- Podcast -> 1º Bach A
-  ('b0000000-0000-0000-0000-000000000003'::uuid, 'c0000000-0000-0000-0000-000000000003'::uuid)  -- Cortometraje -> 2º Bach A
-) AS assignments(subject_id, group_id);`}
-              </pre>
+              <pre className="text-xs text-green-400 font-mono whitespace-pre">{step5SQL}</pre>
+            </div>
+          </div>
+
+          {/* Step 6 */}
+          <div className="border-l-4 border-blue-500 pl-4">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-semibold text-gray-800">Paso 6: Asignar materias al profesor</h3>
+              <button
+                onClick={() => copyToClipboard(step6SQL, 'step6')}
+                className="flex items-center gap-1 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded"
+              >
+                {copiedStep === 'step6' ? <Check className="w-3 h-3 text-green-600" /> : <Copy className="w-3 h-3" />}
+                {copiedStep === 'step6' ? 'Copiado' : 'Copiar SQL'}
+              </button>
+            </div>
+            <p className="text-sm text-gray-600 mb-3">
+              Asigna las materias al profesor:
+            </p>
+            <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
+              <pre className="text-xs text-green-400 font-mono whitespace-pre">{step6SQL}</pre>
             </div>
           </div>
         </div>
@@ -193,32 +301,35 @@ FROM (VALUES
           </div>
         </div>
       </div>
-
-      {/* Help */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-        <h3 className="font-semibold text-blue-800 mb-2">¿Necesitas ayuda?</h3>
-        <p className="text-sm text-blue-700 mb-3">
-          Si tienes problemas con la configuración, consulta la documentación oficial de Supabase:
-        </p>
-        <div className="flex flex-wrap gap-2">
-          <a
-            href="https://supabase.com/docs/guides/database"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 px-3 py-1.5 bg-white text-blue-700 text-sm rounded-lg hover:bg-blue-50 border border-blue-200"
-          >
-            <ExternalLink className="w-3 h-3" /> Documentación de base de datos
-          </a>
-          <a
-            href="https://supabase.com/docs/guides/auth"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 px-3 py-1.5 bg-white text-blue-700 text-sm rounded-lg hover:bg-blue-50 border border-blue-200"
-          >
-            <ExternalLink className="w-3 h-3" /> Documentación de autenticación
-          </a>
-        </div>
-      </div>
     </div>
   );
 };
+
+const step5SQL = `-- Crear perfiles para los usuarios
+INSERT INTO users (id, email, name, role, active)
+SELECT 
+  id,
+  email,
+  CASE 
+    WHEN email = 'admin@ieslopedevega.es' THEN 'Administrador del Centro'
+    WHEN email = 'profesor@ieslopedevega.es' THEN 'D. García López'
+  END as name,
+  CASE 
+    WHEN email = 'admin@ieslopedevega.es' THEN 'admin'
+    WHEN email = 'profesor@ieslopedevega.es' THEN 'teacher'
+  END as role,
+  true as active
+FROM auth.users
+WHERE email IN ('admin@ieslopedevega.es', 'profesor@ieslopedevega.es');`;
+
+const step6SQL = `-- Asignar materias al profesor
+INSERT INTO teacher_subject_groups (teacher_id, subject_id, group_id)
+SELECT 
+  (SELECT id FROM users WHERE email = 'profesor@ieslopedevega.es'),
+  subject_id,
+  group_id
+FROM (VALUES
+  ('b0000000-0000-0000-0000-000000000001'::uuid, 'c0000000-0000-0000-0000-000000000001'::uuid),
+  ('b0000000-0000-0000-0000-000000000002'::uuid, 'c0000000-0000-0000-0000-000000000001'::uuid),
+  ('b0000000-0000-0000-0000-000000000003'::uuid, 'c0000000-0000-0000-0000-000000000003'::uuid)
+) AS assignments(subject_id, group_id);`;
