@@ -10,6 +10,8 @@ export const SetupGuide: React.FC = () => {
   const [showSeed, setShowSeed] = useState(false);
   const [copiedStep, setCopiedStep] = useState<string | null>(null);
 
+  const [setupCompletoContent, setSetupCompletoContent] = useState<string>('');
+
   useEffect(() => {
     // Cargar los archivos SQL
     fetch('/sql/schema.sql')
@@ -21,6 +23,11 @@ export const SetupGuide: React.FC = () => {
       .then(r => r.text())
       .then(setSeedContent)
       .catch(() => setSeedContent('-- No se pudo cargar seed.sql'));
+
+    fetch('/sql/setup-completo.sql')
+      .then(r => r.text())
+      .then(setSetupCompletoContent)
+      .catch(() => setSetupCompletoContent('-- No se pudo cargar setup-completo.sql'));
   }, []);
 
   const copyToClipboard = (text: string, stepId: string) => {
@@ -45,6 +52,35 @@ export const SetupGuide: React.FC = () => {
         <h1 className="text-2xl font-bold text-gray-800">Guía de configuración</h1>
         <p className="text-sm text-gray-500 mt-1">Configura Supabase para persistir los datos</p>
       </div>
+
+      {/* Error Solution Banner */}
+      {!supabaseConnected && (
+        <div className="bg-red-50 border-2 border-red-300 rounded-xl p-6">
+          <div className="flex items-start gap-4">
+            <AlertCircle className="w-8 h-8 text-red-600 flex-shrink-0" />
+            <div className="flex-1">
+              <h2 className="text-lg font-semibold text-red-800 mb-2">
+                ¿Error: "relation already exists"?
+              </h2>
+              <p className="text-sm text-red-700 mb-3">
+                Si ves el error <code className="bg-red-100 px-2 py-0.5 rounded">ERROR: 42P07: relation "schools" already exists</code>, 
+                significa que las tablas ya existen en tu base de datos.
+              </p>
+              <div className="bg-white border border-red-200 rounded-lg p-4">
+                <p className="text-sm font-medium text-gray-800 mb-2">✅ Solución rápida:</p>
+                <ol className="text-sm text-gray-700 space-y-1 list-decimal list-inside">
+                  <li>Descarga <strong>setup-completo.sql</strong> (botón verde arriba)</li>
+                  <li>Copia todo el contenido en el SQL Editor de Supabase</li>
+                  <li>Haz clic en <strong>Run</strong></li>
+                </ol>
+                <p className="text-xs text-gray-600 mt-2">
+                  Este script elimina las tablas existentes y las recrea desde cero con todos los datos iniciales.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Connection Status */}
       <div className={`rounded-xl border-2 p-6 ${supabaseConnected ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'}`}>
@@ -73,9 +109,22 @@ export const SetupGuide: React.FC = () => {
           <Download className="w-5 h-5" /> Archivos SQL disponibles
         </h2>
         <p className="text-sm text-blue-800 mb-4">
-          Descarga los archivos SQL y cópialos en el SQL Editor de Supabase:
+          <strong>Recomendado:</strong> Si las tablas ya existen, usa <code className="bg-blue-100 px-1 rounded">setup-completo.sql</code> que las elimina y recrea desde cero.
         </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <button
+            onClick={() => downloadFile(setupCompletoContent, 'setup-completo.sql')}
+            className="flex items-center gap-3 p-4 bg-white border-2 border-green-400 rounded-lg hover:bg-green-50 transition-colors text-left"
+          >
+            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <CheckCircle className="w-5 h-5 text-green-600" />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-gray-800 text-sm">setup-completo.sql</p>
+              <p className="text-xs text-gray-500">Todo en uno (recomendado)</p>
+            </div>
+            <Download className="w-4 h-4 text-green-600" />
+          </button>
           <button
             onClick={() => downloadFile(schemaContent, 'schema.sql')}
             className="flex items-center gap-3 p-4 bg-white border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors text-left"
@@ -85,7 +134,7 @@ export const SetupGuide: React.FC = () => {
             </div>
             <div className="flex-1">
               <p className="font-medium text-gray-800 text-sm">schema.sql</p>
-              <p className="text-xs text-gray-500">Crea las tablas e índices</p>
+              <p className="text-xs text-gray-500">Solo tablas e índices</p>
             </div>
             <Download className="w-4 h-4 text-blue-600" />
           </button>
@@ -93,14 +142,14 @@ export const SetupGuide: React.FC = () => {
             onClick={() => downloadFile(seedContent, 'seed.sql')}
             className="flex items-center gap-3 p-4 bg-white border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors text-left"
           >
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-              <FileText className="w-5 h-5 text-green-600" />
+            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <FileText className="w-5 h-5 text-purple-600" />
             </div>
             <div className="flex-1">
               <p className="font-medium text-gray-800 text-sm">seed.sql</p>
-              <p className="text-xs text-gray-500">Datos iniciales (materias, alumnos, etc.)</p>
+              <p className="text-xs text-gray-500">Solo datos iniciales</p>
             </div>
-            <Download className="w-4 h-4 text-green-600" />
+            <Download className="w-4 h-4 text-purple-600" />
           </button>
         </div>
       </div>
@@ -129,77 +178,74 @@ export const SetupGuide: React.FC = () => {
           </div>
 
           {/* Step 2 */}
-          <div className="border-l-4 border-blue-500 pl-4">
+          <div className="border-l-4 border-green-500 pl-4">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="font-semibold text-gray-800">Paso 2: Ejecutar schema.sql</h3>
+              <h3 className="font-semibold text-gray-800">Paso 2: Ejecutar setup-completo.sql (RECOMENDADO)</h3>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => copyToClipboard(setupCompletoContent, 'setup-completo')}
+                  className="flex items-center gap-1 px-2 py-1 text-xs bg-green-100 hover:bg-green-200 rounded text-green-700"
+                >
+                  {copiedStep === 'setup-completo' ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                  {copiedStep === 'setup-completo' ? 'Copiado' : 'Copiar'}
+                </button>
+                <button
+                  onClick={() => downloadFile(setupCompletoContent, 'setup-completo.sql')}
+                  className="flex items-center gap-1 px-2 py-1 text-xs bg-green-100 hover:bg-green-200 rounded text-green-700"
+                >
+                  <Download className="w-3 h-3" /> Descargar
+                </button>
+              </div>
+            </div>
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
+              <p className="text-sm text-green-800">
+                <strong>✅ Este es el script que necesitas.</strong> Elimina las tablas existentes y las recrea desde cero con todos los datos iniciales.
+                Resuelve el error "relation already exists".
+              </p>
+            </div>
+            <p className="text-sm text-gray-600 mb-3">
+              Copia y pega este SQL en el editor, luego haz clic en <strong>Run</strong>.
+            </p>
+          </div>
+
+          {/* Step 3 - Alternative */}
+          <div className="border-l-4 border-gray-300 pl-4">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-semibold text-gray-600">Alternativa: Ejecutar schema.sql + seed.sql por separado</h3>
               <div className="flex gap-2">
                 <button
                   onClick={() => copyToClipboard(schemaContent, 'schema')}
                   className="flex items-center gap-1 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded"
                 >
                   {copiedStep === 'schema' ? <Check className="w-3 h-3 text-green-600" /> : <Copy className="w-3 h-3" />}
-                  {copiedStep === 'schema' ? 'Copiado' : 'Copiar'}
+                  {copiedStep === 'schema' ? 'Copiado' : 'Copiar schema'}
                 </button>
-                <button
-                  onClick={() => downloadFile(schemaContent, 'schema.sql')}
-                  className="flex items-center gap-1 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded"
-                >
-                  <Download className="w-3 h-3" /> Descargar
-                </button>
-                <button
-                  onClick={() => setShowSchema(!showSchema)}
-                  className="flex items-center gap-1 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded"
-                >
-                  {showSchema ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                  {showSchema ? 'Ocultar' : 'Ver'}
-                </button>
-              </div>
-            </div>
-            <p className="text-sm text-gray-600 mb-3">
-              Copia y pega este SQL en el editor, luego haz clic en <strong>Run</strong>. Crea todas las tablas necesarias.
-            </p>
-            {showSchema && (
-              <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto max-h-64 overflow-y-auto">
-                <pre className="text-xs text-green-400 font-mono whitespace-pre">{schemaContent}</pre>
-              </div>
-            )}
-          </div>
-
-          {/* Step 3 */}
-          <div className="border-l-4 border-blue-500 pl-4">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="font-semibold text-gray-800">Paso 3: Ejecutar seed.sql</h3>
-              <div className="flex gap-2">
                 <button
                   onClick={() => copyToClipboard(seedContent, 'seed')}
                   className="flex items-center gap-1 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded"
                 >
                   {copiedStep === 'seed' ? <Check className="w-3 h-3 text-green-600" /> : <Copy className="w-3 h-3" />}
-                  {copiedStep === 'seed' ? 'Copiado' : 'Copiar'}
-                </button>
-                <button
-                  onClick={() => downloadFile(seedContent, 'seed.sql')}
-                  className="flex items-center gap-1 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded"
-                >
-                  <Download className="w-3 h-3" /> Descargar
-                </button>
-                <button
-                  onClick={() => setShowSeed(!showSeed)}
-                  className="flex items-center gap-1 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded"
-                >
-                  {showSeed ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                  {showSeed ? 'Ocultar' : 'Ver'}
+                  {copiedStep === 'seed' ? 'Copiado' : 'Copiar seed'}
                 </button>
               </div>
             </div>
-            <p className="text-sm text-gray-600 mb-3">
-              Crea los datos iniciales: centro, materias, grupos, alumnos, competencias y criterios.
+            <p className="text-sm text-gray-500 mb-3">
+              Si prefieres ejecutar los scripts por separado (solo si las tablas NO existen):
             </p>
-            {showSeed && (
-              <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto max-h-64 overflow-y-auto">
-                <pre className="text-xs text-green-400 font-mono whitespace-pre">{seedContent}</pre>
-              </div>
-            )}
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => downloadFile(schemaContent, 'schema.sql')}
+                className="flex items-center justify-center gap-2 px-3 py-2 text-xs bg-white border border-gray-300 rounded hover:bg-gray-50"
+              >
+                <Download className="w-3 h-3" /> Descargar schema.sql
+              </button>
+              <button
+                onClick={() => downloadFile(seedContent, 'seed.sql')}
+                className="flex items-center justify-center gap-2 px-3 py-2 text-xs bg-white border border-gray-300 rounded hover:bg-gray-50"
+              >
+                <Download className="w-3 h-3" /> Descargar seed.sql
+              </button>
+            </div>
           </div>
 
           {/* Step 4 */}
