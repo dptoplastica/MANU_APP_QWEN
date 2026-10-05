@@ -17,6 +17,7 @@ import { Programmes } from './pages/Programmes';
 import { Admin } from './pages/Admin';
 import { SettingsPage } from './pages/Settings';
 import { SetupGuide } from './pages/SetupGuide';
+import { SqlDownloads } from './pages/SqlDownloads';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, isLoading } = useApp();
@@ -52,6 +53,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
       <Route path="/configuracion" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
       <Route path="/setup" element={<ProtectedRoute><SetupGuide /></ProtectedRoute>} />
+      <Route path="/sql-downloads" element={<ProtectedRoute><SqlDownloads /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );

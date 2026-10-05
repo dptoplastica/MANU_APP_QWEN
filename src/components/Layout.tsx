@@ -6,7 +6,7 @@ import { DiagnosticPanel } from './DiagnosticPanel';
 import {
   Home, BookOpen, Users, GraduationCap, ClipboardList, Target,
   Activity, BookMarked, BarChart3, FileText, Settings, Shield,
-  Menu, X, Bell, LogOut, ChevronDown, User
+  Menu, X, Bell, LogOut, ChevronDown, User, Download
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -27,6 +27,7 @@ const navItems = [
   { path: '/alumnos', label: 'Alumnos', icon: Users },
   { path: '/configuracion', label: 'Configuración', icon: Settings },
   { path: '/setup', label: 'Guía de configuración', icon: Shield },
+  { path: '/sql-downloads', label: 'Descargar SQL', icon: Download },
 ];
 
 const adminItems = [
