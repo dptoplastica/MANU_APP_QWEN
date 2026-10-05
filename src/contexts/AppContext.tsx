@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, Grade, CriterionAssessment, CompetencyAssessment, Report, Notification, LearningSituation, Activity } from '../types';
+import { User, Grade, CriterionAssessment, CompetencyAssessment, Report, Notification, LearningSituation, Activity, Programme } from '../types';
 import { dataService } from '../services/dataService';
 import * as seed from '../data/seed';
 
@@ -11,6 +11,7 @@ interface AppState {
   grades: Grade[];
   learningSituations: LearningSituation[];
   activities: Activity[];
+  programmes: Programme[];
   criterionAssessments: CriterionAssessment[];
   competencyAssessments: CompetencyAssessment[];
   reports: Report[];
@@ -20,6 +21,7 @@ interface AppState {
   updateGrade: (grade: Grade) => Promise<void>;
   updateLearningSituation: (sda: LearningSituation) => void;
   updateActivity: (activity: Activity) => void;
+  updateProgramme: (programme: Programme) => void;
   addReport: (report: Report) => void;
   markNotificationRead: (id: string) => void;
 }
@@ -34,6 +36,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [grades, setGrades] = useState<Grade[]>([]);
   const [learningSituations, setLearningSituations] = useState<LearningSituation[]>(seed.allLearningSituations);
   const [activities, setActivities] = useState<Activity[]>(seed.allActivities);
+  const [programmes, setProgrammes] = useState<Programme[]>(seed.programmes);
   const [criterionAssessments] = useState<CriterionAssessment[]>([]);
   const [competencyAssessments] = useState<CompetencyAssessment[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
@@ -123,6 +126,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setActivities(prev => prev.map(a => a.id === updatedActivity.id ? updatedActivity : a));
   };
 
+  const updateProgramme = (updatedProgramme: Programme) => {
+    setProgrammes(prev => prev.map(p => p.id === updatedProgramme.id ? updatedProgramme : p));
+  };
+
   const addReport = (report: Report) => {
     setReports(prev => [...prev, report]);
   };
@@ -140,6 +147,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       grades,
       learningSituations,
       activities,
+      programmes,
       criterionAssessments,
       competencyAssessments,
       reports,
@@ -149,6 +157,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       updateGrade,
       updateLearningSituation,
       updateActivity,
+      updateProgramme,
       addReport,
       markNotificationRead
     }}>
