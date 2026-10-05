@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useApp } from '../contexts/AppContext';
 import { school } from '../data/seed';
+import { DiagnosticPanel } from './DiagnosticPanel';
 import {
   Home, BookOpen, Users, GraduationCap, ClipboardList, Target,
   Activity, BookMarked, BarChart3, FileText, Settings, Shield,
@@ -202,6 +203,9 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           {children}
         </main>
       </div>
+
+      {/* Diagnostic Panel */}
+      <DiagnosticPanel />
     </div>
   );
 };

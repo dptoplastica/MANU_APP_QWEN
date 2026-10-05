@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider, useApp } from './contexts/AppContext';
 import { Layout } from './components/Layout';
 import { LoadingScreen } from './components/LoadingScreen';
+import { DiagnosticPanel } from './components/DiagnosticPanel';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { Subjects, SubjectDetail } from './pages/Subjects';
