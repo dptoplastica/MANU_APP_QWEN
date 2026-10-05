@@ -1,11 +1,11 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useApp } from '../contexts/AppContext';
-import { subjects, departments, allLearningSituations, allActivities, teacherSubjectGroups, groups, allSpecificCompetencies, allEvaluationCriteria } from '../data/seed';
+import { subjects, departments, allLearningSituations, allActivities, allSpecificCompetencies, allEvaluationCriteria } from '../data/seed';
 import { BookOpen, Target, Activity, Users, ArrowLeft, CheckCircle } from 'lucide-react';
 
 export const Subjects: React.FC = () => {
-  const { currentUser } = useApp();
+  const { currentUser, teacherSubjectGroups, groups } = useApp();
   const myAssignments = teacherSubjectGroups.filter(tsg => tsg.teacherId === currentUser?.id);
   const mySubjectIds = [...new Set(myAssignments.map(a => a.subjectId))];
   const mySubjects = subjects.filter(s => mySubjectIds.includes(s.id));
@@ -66,6 +66,7 @@ export const Subjects: React.FC = () => {
 
 export const SubjectDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const { teacherSubjectGroups, groups } = useApp();
   const subject = subjects.find(s => s.id === id);
   if (!subject) return <div className="text-center py-12 text-gray-500">Materia no encontrada</div>;
 

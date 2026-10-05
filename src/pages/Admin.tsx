@@ -5,15 +5,29 @@ import { User, Subject, Group, Student, TeacherSubjectGroup } from '../types';
 import { Shield, Users, BookOpen, GraduationCap, Link2, Calendar, Plus, Edit, Trash2, X, Save, Upload, FileText, Download } from 'lucide-react';
 
 export const Admin: React.FC = () => {
-  const { currentUser } = useApp();
+  const { 
+    currentUser,
+    groups: contextGroups,
+    students: contextStudents,
+    teacherSubjectGroups: contextAssignments,
+    createGroup,
+    updateGroup,
+    deleteGroup,
+    createStudent,
+    updateStudent,
+    deleteStudent,
+    createAssignment,
+    deleteAssignment
+  } = useApp();
+  
   const [activeTab, setActiveTab] = useState<'teachers' | 'subjects' | 'groups' | 'students' | 'assignments' | 'years'>('teachers');
   
   // Estados para datos editables
   const [usersList, setUsersList] = useState<User[]>(seed.users);
   const [subjectsList, setSubjectsList] = useState<Subject[]>(seed.subjects);
-  const [groupsList, setGroupsList] = useState<Group[]>(seed.groups);
-  const [studentsList, setStudentsList] = useState<Student[]>(seed.students);
-  const [assignmentsList, setAssignmentsList] = useState<TeacherSubjectGroup[]>(seed.teacherSubjectGroups);
+  const [groupsList, setGroupsList] = useState<Group[]>(contextGroups);
+  const [studentsList, setStudentsList] = useState<Student[]>(contextStudents);
+  const [assignmentsList, setAssignmentsList] = useState<TeacherSubjectGroup[]>(contextAssignments);
   
   // Estados para modales
   const [showModal, setShowModal] = useState(false);
@@ -66,7 +80,7 @@ export const Admin: React.FC = () => {
     setFormData({});
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (modalType === 'create') {
       // Crear nuevo
       const newItem = { ...formData, id: `new-${Date.now()}` };
@@ -79,13 +93,22 @@ export const Admin: React.FC = () => {
           setSubjectsList([...subjectsList, newItem]);
           break;
         case 'groups':
-          setGroupsList([...groupsList, newItem]);
+          const successGroup = await createGroup(newItem);
+          if (successGroup) {
+            setGroupsList([...groupsList, newItem]);
+          }
           break;
         case 'students':
-          setStudentsList([...studentsList, newItem]);
+          const successStudent = await createStudent(newItem);
+          if (successStudent) {
+            setStudentsList([...studentsList, newItem]);
+          }
           break;
         case 'assignments':
-          setAssignmentsList([...assignmentsList, newItem]);
+          const successAssignment = await createAssignment(newItem);
+          if (successAssignment) {
+            setAssignmentsList([...assignmentsList, newItem]);
+          }
           break;
       }
     } else {
@@ -98,10 +121,18 @@ export const Admin: React.FC = () => {
           setSubjectsList(subjectsList.map(s => s.id === editingItem.id ? { ...editingItem, ...formData } : s));
           break;
         case 'groups':
-          setGroupsList(groupsList.map(g => g.id === editingItem.id ? { ...editingItem, ...formData } : g));
+          const updatedGroup = { ...editingItem, ...formData };
+          const successUpdateGroup = await updateGroup(updatedGroup);
+          if (successUpdateGroup) {
+            setGroupsList(groupsList.map(g => g.id === editingItem.id ? updatedGroup : g));
+          }
           break;
         case 'students':
-          setStudentsList(studentsList.map(s => s.id === editingItem.id ? { ...editingItem, ...formData } : s));
+          const updatedStudent = { ...editingItem, ...formData };
+          const successUpdateStudent = await updateStudent(updatedStudent);
+          if (successUpdateStudent) {
+            setStudentsList(studentsList.map(s => s.id === editingItem.id ? updatedStudent : s));
+          }
           break;
         case 'assignments':
           setAssignmentsList(assignmentsList.map(a => a.id === editingItem.id ? { ...editingItem, ...formData } : a));
@@ -112,7 +143,7 @@ export const Admin: React.FC = () => {
     closeModal();
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (!confirm('¿Estás seguro de que quieres eliminar este elemento?')) return;
     
     switch (activeTab) {
@@ -123,13 +154,22 @@ export const Admin: React.FC = () => {
         setSubjectsList(subjectsList.filter(s => s.id !== id));
         break;
       case 'groups':
-        setGroupsList(groupsList.filter(g => g.id !== id));
+        const successDeleteGroup = await deleteGroup(id);
+        if (successDeleteGroup) {
+          setGroupsList(groupsList.filter(g => g.id !== id));
+        }
         break;
       case 'students':
-        setStudentsList(studentsList.filter(s => s.id !== id));
+        const successDeleteStudent = await deleteStudent(id);
+        if (successDeleteStudent) {
+          setStudentsList(studentsList.filter(s => s.id !== id));
+        }
         break;
       case 'assignments':
-        setAssignmentsList(assignmentsList.filter(a => a.id !== id));
+        const successDeleteAssignment = await deleteAssignment(id);
+        if (successDeleteAssignment) {
+          setAssignmentsList(assignmentsList.filter(a => a.id !== id));
+        }
         break;
     }
   };

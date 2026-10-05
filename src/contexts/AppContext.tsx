@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, Grade, CriterionAssessment, CompetencyAssessment, Report, Notification, LearningSituation, Activity, Programme } from '../types';
+import { User, Grade, CriterionAssessment, CompetencyAssessment, Report, Notification, LearningSituation, Activity, Programme, Group, Student, TeacherSubjectGroup } from '../types';
 import { dataService } from '../services/dataService';
 import * as seed from '../data/seed';
 
@@ -12,6 +12,9 @@ interface AppState {
   learningSituations: LearningSituation[];
   activities: Activity[];
   programmes: Programme[];
+  groups: Group[];
+  students: Student[];
+  teacherSubjectGroups: TeacherSubjectGroup[];
   criterionAssessments: CriterionAssessment[];
   competencyAssessments: CompetencyAssessment[];
   reports: Report[];
@@ -25,6 +28,15 @@ interface AppState {
   updateProgramme: (programme: Programme) => void;
   addReport: (report: Report) => void;
   markNotificationRead: (id: string) => void;
+  // Admin CRUD operations
+  createGroup: (group: Group) => Promise<boolean>;
+  updateGroup: (group: Group) => Promise<boolean>;
+  deleteGroup: (id: string) => Promise<boolean>;
+  createStudent: (student: Student) => Promise<boolean>;
+  updateStudent: (student: Student) => Promise<boolean>;
+  deleteStudent: (id: string) => Promise<boolean>;
+  createAssignment: (assignment: TeacherSubjectGroup) => Promise<boolean>;
+  deleteAssignment: (id: string) => Promise<boolean>;
 }
 
 const AppContext = createContext<AppState | undefined>(undefined);
@@ -38,6 +50,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [learningSituations, setLearningSituations] = useState<LearningSituation[]>(seed.allLearningSituations);
   const [activities, setActivities] = useState<Activity[]>(seed.allActivities);
   const [programmes, setProgrammes] = useState<Programme[]>(seed.programmes);
+  const [groups, setGroups] = useState<Group[]>(seed.groups);
+  const [students, setStudents] = useState<Student[]>(seed.students);
+  const [teacherSubjectGroups, setTeacherSubjectGroups] = useState<TeacherSubjectGroup[]>(seed.teacherSubjectGroups);
   const [criterionAssessments] = useState<CriterionAssessment[]>([]);
   const [competencyAssessments] = useState<CompetencyAssessment[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
@@ -143,6 +158,74 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
   };
 
+  // Admin CRUD operations
+  const createGroup = async (group: Group): Promise<boolean> => {
+    const created = await dataService.createGroup(group);
+    if (created) {
+      setGroups(prev => [...prev, created]);
+      return true;
+    }
+    return false;
+  };
+
+  const updateGroup = async (group: Group): Promise<boolean> => {
+    const success = await dataService.updateGroup(group);
+    if (success) {
+      setGroups(prev => prev.map(g => g.id === group.id ? group : g));
+    }
+    return success;
+  };
+
+  const deleteGroup = async (id: string): Promise<boolean> => {
+    const success = await dataService.deleteGroup(id);
+    if (success) {
+      setGroups(prev => prev.filter(g => g.id !== id));
+    }
+    return success;
+  };
+
+  const createStudent = async (student: Student): Promise<boolean> => {
+    const created = await dataService.createStudent(student);
+    if (created) {
+      setStudents(prev => [...prev, created]);
+      return true;
+    }
+    return false;
+  };
+
+  const updateStudent = async (student: Student): Promise<boolean> => {
+    const success = await dataService.updateStudent(student);
+    if (success) {
+      setStudents(prev => prev.map(s => s.id === student.id ? student : s));
+    }
+    return success;
+  };
+
+  const deleteStudent = async (id: string): Promise<boolean> => {
+    const success = await dataService.deleteStudent(id);
+    if (success) {
+      setStudents(prev => prev.filter(s => s.id !== id));
+    }
+    return success;
+  };
+
+  const createAssignment = async (assignment: TeacherSubjectGroup): Promise<boolean> => {
+    const created = await dataService.createAssignment(assignment);
+    if (created) {
+      setTeacherSubjectGroups(prev => [...prev, created]);
+      return true;
+    }
+    return false;
+  };
+
+  const deleteAssignment = async (id: string): Promise<boolean> => {
+    const success = await dataService.deleteAssignment(id);
+    if (success) {
+      setTeacherSubjectGroups(prev => prev.filter(a => a.id !== id));
+    }
+    return success;
+  };
+
   return (
     <AppContext.Provider value={{
       currentUser,
@@ -153,6 +236,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       learningSituations,
       activities,
       programmes,
+      groups,
+      students,
+      teacherSubjectGroups,
       criterionAssessments,
       competencyAssessments,
       reports,
@@ -165,7 +251,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       addActivity,
       updateProgramme,
       addReport,
-      markNotificationRead
+      markNotificationRead,
+      createGroup,
+      updateGroup,
+      deleteGroup,
+      createStudent,
+      updateStudent,
+      deleteStudent,
+      createAssignment,
+      deleteAssignment
     }}>
       {children}
     </AppContext.Provider>

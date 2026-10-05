@@ -1,11 +1,11 @@
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useApp } from '../contexts/AppContext';
-import { groups, students, subjects, teacherSubjectGroups, allActivities } from '../data/seed';
+import { subjects, allActivities } from '../data/seed';
 import { Users, BookOpen, ArrowLeft, User } from 'lucide-react';
 
 export const GroupsPage: React.FC = () => {
-  const { currentUser } = useApp();
+  const { currentUser, groups, students, teacherSubjectGroups } = useApp();
   const myAssignments = teacherSubjectGroups.filter(tsg => tsg.teacherId === currentUser?.id);
   const myGroupIds = [...new Set(myAssignments.map(a => a.groupId))];
   const myGroups = groups.filter(g => myGroupIds.includes(g.id));
@@ -59,6 +59,7 @@ export const GroupsPage: React.FC = () => {
 
 export const GroupDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const { groups, students } = useApp();
   const group = groups.find(g => g.id === id);
   if (!group) return <div className="text-center py-12 text-gray-500">Grupo no encontrado</div>;
 
@@ -112,7 +113,7 @@ export const GroupDetail: React.FC = () => {
 };
 
 export const StudentsPage: React.FC = () => {
-  const { currentUser } = useApp();
+  const { currentUser, groups, students, teacherSubjectGroups } = useApp();
   const myAssignments = teacherSubjectGroups.filter(tsg => tsg.teacherId === currentUser?.id);
   const myGroupIds = [...new Set(myAssignments.map(a => a.groupId))];
   const myStudents = students.filter(s => myGroupIds.includes(s.groupId));
@@ -155,8 +156,8 @@ export const StudentsPage: React.FC = () => {
 
 export const StudentDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const { groups, students, teacherSubjectGroups, grades } = useApp();
   const student = students.find(s => s.id === id);
-  const { grades } = useApp();
 
   if (!student) return <div className="text-center py-12 text-gray-500">Alumno no encontrado</div>;
 

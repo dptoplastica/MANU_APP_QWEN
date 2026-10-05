@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useApp } from '../contexts/AppContext';
-import { subjects, groups, allActivities, students, teacherSubjectGroups } from '../data/seed';
+import { subjects, allActivities } from '../data/seed';
 import { BookMarked, Download, Filter, Calendar } from 'lucide-react';
 
 export const Gradebook: React.FC = () => {
-  const { currentUser, grades, updateGrade } = useApp();
+  const { currentUser, grades, updateGrade, groups, students, teacherSubjectGroups } = useApp();
   const myAssignments = teacherSubjectGroups.filter(tsg => tsg.teacherId === currentUser?.id);
 
   const [selectedSubject, setSelectedSubject] = useState(myAssignments[0]?.subjectId || '');

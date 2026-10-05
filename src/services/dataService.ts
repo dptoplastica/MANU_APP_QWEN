@@ -298,6 +298,157 @@ export const supabaseDataService = {
     }));
   },
 
+  // CRUD para Grupos
+  async createGroup(group: Group): Promise<Group | null> {
+    const { data, error } = await supabase
+      .from('groups')
+      .insert({
+        name: group.name,
+        course: group.course,
+        academic_year_id: group.academicYearId
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error creating group:', error.message);
+      return null;
+    }
+    
+    return {
+      id: data.id,
+      name: data.name,
+      course: data.course,
+      academicYearId: data.academic_year_id
+    };
+  },
+
+  async updateGroup(group: Group): Promise<boolean> {
+    const { error } = await supabase
+      .from('groups')
+      .update({
+        name: group.name,
+        course: group.course,
+        academic_year_id: group.academicYearId
+      })
+      .eq('id', group.id);
+    
+    if (error) {
+      console.error('Error updating group:', error.message);
+      return false;
+    }
+    return true;
+  },
+
+  async deleteGroup(id: string): Promise<boolean> {
+    const { error } = await supabase
+      .from('groups')
+      .delete()
+      .eq('id', id);
+    
+    if (error) {
+      console.error('Error deleting group:', error.message);
+      return false;
+    }
+    return true;
+  },
+
+  // CRUD para Alumnos
+  async createStudent(student: Student): Promise<Student | null> {
+    const { data, error } = await supabase
+      .from('students')
+      .insert({
+        first_name: student.firstName,
+        last_name: student.lastName,
+        group_id: student.groupId,
+        observations: student.observations
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error creating student:', error.message);
+      return null;
+    }
+    
+    return {
+      id: data.id,
+      firstName: data.first_name,
+      lastName: data.last_name,
+      groupId: data.group_id,
+      observations: data.observations || ''
+    };
+  },
+
+  async updateStudent(student: Student): Promise<boolean> {
+    const { error } = await supabase
+      .from('students')
+      .update({
+        first_name: student.firstName,
+        last_name: student.lastName,
+        group_id: student.groupId,
+        observations: student.observations
+      })
+      .eq('id', student.id);
+    
+    if (error) {
+      console.error('Error updating student:', error.message);
+      return false;
+    }
+    return true;
+  },
+
+  async deleteStudent(id: string): Promise<boolean> {
+    const { error } = await supabase
+      .from('students')
+      .delete()
+      .eq('id', id);
+    
+    if (error) {
+      console.error('Error deleting student:', error.message);
+      return false;
+    }
+    return true;
+  },
+
+  // CRUD para Asignaciones Profesor-Materia-Grupo
+  async createAssignment(assignment: TeacherSubjectGroup): Promise<TeacherSubjectGroup | null> {
+    const { data, error } = await supabase
+      .from('teacher_subject_groups')
+      .insert({
+        teacher_id: assignment.teacherId,
+        subject_id: assignment.subjectId,
+        group_id: assignment.groupId
+      })
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error creating assignment:', error.message);
+      return null;
+    }
+    
+    return {
+      id: data.id,
+      teacherId: data.teacher_id,
+      subjectId: data.subject_id,
+      groupId: data.group_id
+    };
+  },
+
+  async deleteAssignment(id: string): Promise<boolean> {
+    const { error } = await supabase
+      .from('teacher_subject_groups')
+      .delete()
+      .eq('id', id);
+    
+    if (error) {
+      console.error('Error deleting assignment:', error.message);
+      return false;
+    }
+    return true;
+  },
+
   async getSpecificCompetencies() {
     const { data, error } = await supabase.from('specific_competencies').select('*');
     if (error || !data || data.length === 0) return seed.allSpecificCompetencies;
@@ -371,6 +522,50 @@ export const dataService = {
   async getTeacherAssignments(teacherId: string): Promise<TeacherSubjectGroup[]> {
     if (useSupabase) return supabaseDataService.getTeacherAssignments(teacherId);
     return seed.teacherSubjectGroups.filter(tsg => tsg.teacherId === teacherId);
+  },
+
+  // CRUD para Grupos
+  async createGroup(group: Group): Promise<Group | null> {
+    if (useSupabase) return supabaseDataService.createGroup(group);
+    // En modo local, simplemente retornamos el grupo con un ID generado
+    return { ...group, id: `local-group-${Date.now()}` };
+  },
+
+  async updateGroup(group: Group): Promise<boolean> {
+    if (useSupabase) return supabaseDataService.updateGroup(group);
+    return true; // En modo local, siempre exitoso
+  },
+
+  async deleteGroup(id: string): Promise<boolean> {
+    if (useSupabase) return supabaseDataService.deleteGroup(id);
+    return true; // En modo local, siempre exitoso
+  },
+
+  // CRUD para Alumnos
+  async createStudent(student: Student): Promise<Student | null> {
+    if (useSupabase) return supabaseDataService.createStudent(student);
+    return { ...student, id: `local-student-${Date.now()}` };
+  },
+
+  async updateStudent(student: Student): Promise<boolean> {
+    if (useSupabase) return supabaseDataService.updateStudent(student);
+    return true;
+  },
+
+  async deleteStudent(id: string): Promise<boolean> {
+    if (useSupabase) return supabaseDataService.deleteStudent(id);
+    return true;
+  },
+
+  // CRUD para Asignaciones
+  async createAssignment(assignment: TeacherSubjectGroup): Promise<TeacherSubjectGroup | null> {
+    if (useSupabase) return supabaseDataService.createAssignment(assignment);
+    return { ...assignment, id: `local-assignment-${Date.now()}` };
+  },
+
+  async deleteAssignment(id: string): Promise<boolean> {
+    if (useSupabase) return supabaseDataService.deleteAssignment(id);
+    return true;
   },
 
   // Datos curriculares (Supabase si disponible, sino seed)
