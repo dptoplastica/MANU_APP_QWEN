@@ -172,6 +172,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const success = await dataService.updateGroup(group);
     if (success) {
       setGroups(prev => prev.map(g => g.id === group.id ? group : g));
+    } else {
+      // Si falla, verificar si es porque el ID no es UUID válido
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(group.id)) {
+        console.warn('Group update failed: This group exists only in local seed data');
+        // Actualizar solo en el estado local
+        setGroups(prev => prev.map(g => g.id === group.id ? group : g));
+        return true; // Retornar true para que la UI se actualice
+      }
     }
     return success;
   };
@@ -180,6 +189,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const success = await dataService.deleteGroup(id);
     if (success) {
       setGroups(prev => prev.filter(g => g.id !== id));
+    } else {
+      // Si falla, verificar si es porque el ID no es UUID válido
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(id)) {
+        console.warn('Group delete failed: This group exists only in local seed data');
+        // Eliminar solo del estado local
+        setGroups(prev => prev.filter(g => g.id !== id));
+        return true; // Retornar true para que la UI se actualice
+      }
     }
     return success;
   };
@@ -197,6 +215,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const success = await dataService.updateStudent(student);
     if (success) {
       setStudents(prev => prev.map(s => s.id === student.id ? student : s));
+    } else {
+      // Si falla, verificar si es porque el ID no es UUID válido
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(student.id)) {
+        console.warn('Student update failed: This student exists only in local seed data');
+        // Actualizar solo en el estado local
+        setStudents(prev => prev.map(s => s.id === student.id ? student : s));
+        return true; // Retornar true para que la UI se actualice
+      }
     }
     return success;
   };
@@ -205,6 +232,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const success = await dataService.deleteStudent(id);
     if (success) {
       setStudents(prev => prev.filter(s => s.id !== id));
+    } else {
+      // Si falla, verificar si es porque el ID no es UUID válido
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(id)) {
+        console.warn('Student delete failed: This student exists only in local seed data');
+        // Eliminar solo del estado local
+        setStudents(prev => prev.filter(s => s.id !== id));
+        return true; // Retornar true para que la UI se actualice
+      }
     }
     return success;
   };
@@ -222,6 +258,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const success = await dataService.deleteAssignment(id);
     if (success) {
       setTeacherSubjectGroups(prev => prev.filter(a => a.id !== id));
+    } else {
+      // Si falla, verificar si es porque el ID no es UUID válido
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(id)) {
+        console.warn('Assignment delete failed: This assignment exists only in local seed data');
+        // Eliminar solo del estado local
+        setTeacherSubjectGroups(prev => prev.filter(a => a.id !== id));
+        return true; // Retornar true para que la UI se actualice
+      }
     }
     return success;
   };

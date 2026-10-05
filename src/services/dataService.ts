@@ -329,6 +329,14 @@ export const supabaseDataService = {
   },
 
   async updateGroup(group: Group): Promise<boolean> {
+    // Validar que el ID sea un UUID válido
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(group.id)) {
+      console.warn('Cannot update group: Invalid UUID format', group.id);
+      console.warn('This group exists only in local seed data and cannot be updated in Supabase');
+      return false;
+    }
+    
     const { error } = await supabase
       .from('groups')
       .update({
@@ -346,6 +354,14 @@ export const supabaseDataService = {
   },
 
   async deleteGroup(id: string): Promise<boolean> {
+    // Validar que el ID sea un UUID válido
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(id)) {
+      console.warn('Cannot delete group: Invalid UUID format', id);
+      console.warn('This group exists only in local seed data and cannot be deleted from Supabase');
+      return false;
+    }
+    
     const { error } = await supabase
       .from('groups')
       .delete()
@@ -386,6 +402,14 @@ export const supabaseDataService = {
   },
 
   async updateStudent(student: Student): Promise<boolean> {
+    // Validar que el ID sea un UUID válido
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(student.id)) {
+      console.warn('Cannot update student: Invalid UUID format', student.id);
+      console.warn('This student exists only in local seed data and cannot be updated in Supabase');
+      return false;
+    }
+    
     const { error } = await supabase
       .from('students')
       .update({
@@ -404,6 +428,14 @@ export const supabaseDataService = {
   },
 
   async deleteStudent(id: string): Promise<boolean> {
+    // Validar que el ID sea un UUID válido
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(id)) {
+      console.warn('Cannot delete student: Invalid UUID format', id);
+      console.warn('This student exists only in local seed data and cannot be deleted from Supabase');
+      return false;
+    }
+    
     const { error } = await supabase
       .from('students')
       .delete()
@@ -442,6 +474,14 @@ export const supabaseDataService = {
   },
 
   async deleteAssignment(id: string): Promise<boolean> {
+    // Validar que el ID sea un UUID válido
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(id)) {
+      console.warn('Cannot delete assignment: Invalid UUID format', id);
+      console.warn('This assignment exists only in local seed data and cannot be deleted from Supabase');
+      return false;
+    }
+    
     const { error } = await supabase
       .from('teacher_subject_groups')
       .delete()
