@@ -21,6 +21,7 @@ interface AppState {
   updateGrade: (grade: Grade) => Promise<void>;
   updateLearningSituation: (sda: LearningSituation) => void;
   updateActivity: (activity: Activity) => void;
+  addActivity: (activity: Activity) => void;
   updateProgramme: (programme: Programme) => void;
   addReport: (report: Report) => void;
   markNotificationRead: (id: string) => void;
@@ -126,6 +127,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setActivities(prev => prev.map(a => a.id === updatedActivity.id ? updatedActivity : a));
   };
 
+  const addActivity = (newActivity: Activity) => {
+    setActivities(prev => [...prev, newActivity]);
+  };
+
   const updateProgramme = (updatedProgramme: Programme) => {
     setProgrammes(prev => prev.map(p => p.id === updatedProgramme.id ? updatedProgramme : p));
   };
@@ -157,6 +162,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       updateGrade,
       updateLearningSituation,
       updateActivity,
+      addActivity,
       updateProgramme,
       addReport,
       markNotificationRead

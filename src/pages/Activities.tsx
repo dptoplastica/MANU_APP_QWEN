@@ -5,7 +5,7 @@ import { Activity as ActivityIcon, Plus, Filter, Calendar, Target, Edit, X, Save
 import { Activity } from '../types';
 
 export const ActivitiesPage: React.FC = () => {
-  const { currentUser, activities, updateActivity } = useApp();
+  const { currentUser, activities, updateActivity, addActivity } = useApp();
   const myAssignments = teacherSubjectGroups.filter(tsg => tsg.teacherId === currentUser?.id);
   const mySubjectIds = [...new Set(myAssignments.map(a => a.subjectId))];
   const myActivities = activities.filter(a => mySubjectIds.includes(a.subjectId));
@@ -15,6 +15,25 @@ export const ActivitiesPage: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
   const [editForm, setEditForm] = useState<Partial<Activity>>({});
+  
+  // Estado para el formulario de nueva actividad
+  const [newActivity, setNewActivity] = useState<Partial<Activity>>({
+    name: '',
+    description: '',
+    date: new Date().toISOString().split('T')[0],
+    sessions: 1,
+    type: 'theoretical',
+    learningSituationId: '',
+    subjectId: mySubjectIds[0] || '',
+    groupId: '',
+    evaluationPeriod: '1',
+    criterionIds: [],
+    basicKnowledgeIds: [],
+    evaluationInstrument: '',
+    weight: 10,
+    maxScore: 10,
+    observations: ''
+  });
 
   const filteredActivities = myActivities.filter(a => {
     if (filterSubject !== 'all' && a.subjectId !== filterSubject) return false;
@@ -67,6 +86,59 @@ export const ActivitiesPage: React.FC = () => {
     setEditForm({ ...editForm, [field]: newArray });
   };
 
+  const handleCreateActivity = () => {
+    if (!newActivity.name || !newActivity.subjectId || !newActivity.groupId) {
+      alert('Por favor, completa los campos obligatorios: Nombre, Materia y Grupo');
+      return;
+    }
+
+    const activity: Activity = {
+      id: `act-new-${Date.now()}`,
+      name: newActivity.name || '',
+      description: newActivity.description || '',
+      date: newActivity.date || new Date().toISOString().split('T')[0],
+      sessions: newActivity.sessions || 1,
+      type: newActivity.type || 'theoretical',
+      learningSituationId: newActivity.learningSituationId || '',
+      subjectId: newActivity.subjectId || '',
+      groupId: newActivity.groupId || '',
+      evaluationPeriod: newActivity.evaluationPeriod || '1',
+      criterionIds: newActivity.criterionIds || [],
+      basicKnowledgeIds: newActivity.basicKnowledgeIds || [],
+      evaluationInstrument: newActivity.evaluationInstrument || '',
+      weight: newActivity.weight || 10,
+      maxScore: newActivity.maxScore || 10,
+      observations: newActivity.observations || ''
+    };
+
+    addActivity(activity);
+    
+    // Reset form
+    setNewActivity({
+      name: '',
+      description: '',
+      date: new Date().toISOString().split('T')[0],
+      sessions: 1,
+      type: 'theoretical',
+      learningSituationId: '',
+      subjectId: mySubjectIds[0] || '',
+      groupId: '',
+      evaluationPeriod: '1',
+      criterionIds: [],
+      basicKnowledgeIds: [],
+      evaluationInstrument: '',
+      weight: 10,
+      maxScore: 10,
+      observations: ''
+    });
+    setShowForm(false);
+  };
+
+  // Obtener grupos disponibles para la materia seleccionada
+  const availableGroupsForNew = groups.filter(g => 
+    myAssignments.some(a => a.subjectId === newActivity.subjectId && a.groupId === g.id)
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -117,12 +189,27 @@ export const ActivitiesPage: React.FC = () => {
           <h2 className="font-semibold text-gray-800 mb-4">Crear nueva actividad</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-              <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Nombre de la actividad" />
+              <label className="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+              <input 
+                type="text" 
+                value={newActivity.name || ''}
+                onChange={e => setNewActivity({ ...newActivity, name: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" 
+                placeholder="Nombre de la actividad" 
+              />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Materia</label>
-              <select className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Materia *</label>
+              <select 
+                value={newActivity.subjectId || ''}
+                onChange={e => {
+                  const subjectId = e.target.value;
+                  const firstGroup = myAssignments.find(a => a.subjectId === subjectId)?.groupId || '';
+                  setNewActivity({ ...newActivity, subjectId, groupId: firstGroup });
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              >
+                <option value="">Seleccionar materia</option>
                 {mySubjectIds.map(sid => {
                   const sub = subjects.find(s => s.id === sid);
                   return <option key={sid} value={sid}>{sub?.name}</option>;
@@ -130,12 +217,46 @@ export const ActivitiesPage: React.FC = () => {
               </select>
             </div>
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Grupo *</label>
+              <select 
+                value={newActivity.groupId || ''}
+                onChange={e => setNewActivity({ ...newActivity, groupId: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              >
+                <option value="">Seleccionar grupo</option>
+                {availableGroupsForNew.map(g => (
+                  <option key={g.id} value={g.id}>{g.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Evaluación</label>
+              <select 
+                value={newActivity.evaluationPeriod || '1'}
+                onChange={e => setNewActivity({ ...newActivity, evaluationPeriod: e.target.value as '1' | '2' | '3' })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              >
+                <option value="1">1ª Evaluación</option>
+                <option value="2">2ª Evaluación</option>
+                <option value="3">3ª Evaluación</option>
+              </select>
+            </div>
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Fecha</label>
-              <input type="date" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+              <input 
+                type="date" 
+                value={newActivity.date || ''}
+                onChange={e => setNewActivity({ ...newActivity, date: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" 
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
-              <select className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+              <select 
+                value={newActivity.type || 'theoretical'}
+                onChange={e => setNewActivity({ ...newActivity, type: e.target.value as Activity['type'] })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              >
                 {Object.entries(typeLabels).map(([key, label]) => (
                   <option key={key} value={key}>{label}</option>
                 ))}
@@ -143,32 +264,85 @@ export const ActivitiesPage: React.FC = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Sesiones</label>
-              <input type="number" min="1" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" defaultValue="1" />
+              <input 
+                type="number" 
+                min="1" 
+                value={newActivity.sessions || 1}
+                onChange={e => setNewActivity({ ...newActivity, sessions: parseInt(e.target.value) || 1 })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" 
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Peso (%)</label>
-              <input type="number" min="0" max="100" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" defaultValue="10" />
+              <input 
+                type="number" 
+                min="0" 
+                max="100" 
+                value={newActivity.weight || 10}
+                onChange={e => setNewActivity({ ...newActivity, weight: parseFloat(e.target.value) || 10 })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" 
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Puntuación máxima</label>
-              <input type="number" min="1" max="10" className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" defaultValue="10" />
+              <input 
+                type="number" 
+                min="1" 
+                max="10" 
+                value={newActivity.maxScore || 10}
+                onChange={e => setNewActivity({ ...newActivity, maxScore: parseFloat(e.target.value) || 10 })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" 
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Instrumento de evaluación</label>
+              <input 
+                type="text" 
+                value={newActivity.evaluationInstrument || ''}
+                onChange={e => setNewActivity({ ...newActivity, evaluationInstrument: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                placeholder="Ej: Rúbrica, prueba práctica, etc."
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Situación de aprendizaje</label>
-              <select className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                {allLearningSituations.filter(s => mySubjectIds.includes(s.subjectId)).map(sda => (
-                  <option key={sda.id} value={sda.id}>{sda.title}</option>
-                ))}
+              <select 
+                value={newActivity.learningSituationId || ''}
+                onChange={e => setNewActivity({ ...newActivity, learningSituationId: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              >
+                <option value="">Sin asignar</option>
+                {allLearningSituations
+                  .filter(s => s.subjectId === newActivity.subjectId)
+                  .map(sda => (
+                    <option key={sda.id} value={sda.id}>{sda.title}</option>
+                  ))}
               </select>
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-              <textarea rows={2} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="Descripción de la actividad" />
+              <textarea 
+                rows={2} 
+                value={newActivity.description || ''}
+                onChange={e => setNewActivity({ ...newActivity, description: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" 
+                placeholder="Descripción de la actividad" 
+              />
             </div>
           </div>
           <div className="flex gap-2 mt-4">
-            <button className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">Guardar</button>
-            <button onClick={() => setShowForm(false)} className="px-4 py-2 border border-gray-300 text-gray-600 text-sm rounded-lg hover:bg-gray-50">Cancelar</button>
+            <button 
+              onClick={handleCreateActivity}
+              className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
+            >
+              Guardar
+            </button>
+            <button 
+              onClick={() => setShowForm(false)} 
+              className="px-4 py-2 border border-gray-300 text-gray-600 text-sm rounded-lg hover:bg-gray-50"
+            >
+              Cancelar
+            </button>
           </div>
         </div>
       )}
