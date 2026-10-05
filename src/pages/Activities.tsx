@@ -35,11 +35,13 @@ export const ActivitiesPage: React.FC = () => {
     observations: ''
   });
 
-  const filteredActivities = myActivities.filter(a => {
-    if (filterSubject !== 'all' && a.subjectId !== filterSubject) return false;
-    if (filterPeriod !== 'all' && a.evaluationPeriod !== filterPeriod) return false;
-    return true;
-  });
+  const filteredActivities = myActivities
+    .filter(a => {
+      if (filterSubject !== 'all' && a.subjectId !== filterSubject) return false;
+      if (filterPeriod !== 'all' && a.evaluationPeriod !== filterPeriod) return false;
+      return true;
+    })
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   const typeLabels: Record<string, string> = {
     theoretical: 'Teórica',
