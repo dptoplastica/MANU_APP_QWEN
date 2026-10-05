@@ -93,21 +93,27 @@ export const Admin: React.FC = () => {
           setSubjectsList([...subjectsList, newItem]);
           break;
         case 'groups':
-          const successGroup = await createGroup(newItem);
-          if (successGroup) {
-            setGroupsList([...groupsList, newItem]);
+          const createdGroup = await createGroup(newItem as Group);
+          if (createdGroup) {
+            setGroupsList([...groupsList, createdGroup]);
+          } else {
+            alert('Error al crear el grupo. Verifica que todos los campos estén completos.');
           }
           break;
         case 'students':
-          const successStudent = await createStudent(newItem);
-          if (successStudent) {
-            setStudentsList([...studentsList, newItem]);
+          const createdStudent = await createStudent(newItem as Student);
+          if (createdStudent) {
+            setStudentsList([...studentsList, createdStudent]);
+          } else {
+            alert('Error al crear el alumno. Verifica que todos los campos estén completos.');
           }
           break;
         case 'assignments':
-          const successAssignment = await createAssignment(newItem);
-          if (successAssignment) {
-            setAssignmentsList([...assignmentsList, newItem]);
+          const createdAssignment = await createAssignment(newItem as TeacherSubjectGroup);
+          if (createdAssignment) {
+            setAssignmentsList([...assignmentsList, createdAssignment]);
+          } else {
+            alert('Error al crear la asignación. Verifica que todos los campos estén completos.');
           }
           break;
       }
@@ -793,6 +799,19 @@ export const Admin: React.FC = () => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
                       placeholder="1º Bachillerato"
                     />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Curso Académico</label>
+                    <select
+                      value={formData.academicYearId || ''}
+                      onChange={e => setFormData({ ...formData, academicYearId: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                    >
+                      <option value="">Seleccionar curso académico</option>
+                      {seed.academicYears.map(year => (
+                        <option key={year.id} value={year.id}>{year.name}</option>
+                      ))}
+                    </select>
                   </div>
                 </>
               )}

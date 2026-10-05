@@ -29,13 +29,13 @@ interface AppState {
   addReport: (report: Report) => void;
   markNotificationRead: (id: string) => void;
   // Admin CRUD operations
-  createGroup: (group: Group) => Promise<boolean>;
+  createGroup: (group: Group) => Promise<Group | null>;
   updateGroup: (group: Group) => Promise<boolean>;
   deleteGroup: (id: string) => Promise<boolean>;
-  createStudent: (student: Student) => Promise<boolean>;
+  createStudent: (student: Student) => Promise<Student | null>;
   updateStudent: (student: Student) => Promise<boolean>;
   deleteStudent: (id: string) => Promise<boolean>;
-  createAssignment: (assignment: TeacherSubjectGroup) => Promise<boolean>;
+  createAssignment: (assignment: TeacherSubjectGroup) => Promise<TeacherSubjectGroup | null>;
   deleteAssignment: (id: string) => Promise<boolean>;
 }
 
@@ -159,13 +159,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   // Admin CRUD operations
-  const createGroup = async (group: Group): Promise<boolean> => {
+  const createGroup = async (group: Group): Promise<Group | null> => {
     const created = await dataService.createGroup(group);
     if (created) {
       setGroups(prev => [...prev, created]);
-      return true;
+      return created;
     }
-    return false;
+    return null;
   };
 
   const updateGroup = async (group: Group): Promise<boolean> => {
@@ -184,13 +184,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return success;
   };
 
-  const createStudent = async (student: Student): Promise<boolean> => {
+  const createStudent = async (student: Student): Promise<Student | null> => {
     const created = await dataService.createStudent(student);
     if (created) {
       setStudents(prev => [...prev, created]);
-      return true;
+      return created;
     }
-    return false;
+    return null;
   };
 
   const updateStudent = async (student: Student): Promise<boolean> => {
@@ -209,13 +209,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return success;
   };
 
-  const createAssignment = async (assignment: TeacherSubjectGroup): Promise<boolean> => {
+  const createAssignment = async (assignment: TeacherSubjectGroup): Promise<TeacherSubjectGroup | null> => {
     const created = await dataService.createAssignment(assignment);
     if (created) {
       setTeacherSubjectGroups(prev => [...prev, created]);
-      return true;
+      return created;
     }
-    return false;
+    return null;
   };
 
   const deleteAssignment = async (id: string): Promise<boolean> => {
