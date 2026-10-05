@@ -287,6 +287,22 @@ export const supabaseDataService = {
     }));
   },
 
+  async getAllTeacherAssignments(): Promise<TeacherSubjectGroup[]> {
+    const { data, error } = await supabase
+      .from('teacher_subject_groups')
+      .select('*');
+    
+    if (error || !data || data.length === 0) {
+      return seed.teacherSubjectGroups;
+    }
+    return data.map((t: any) => ({
+      id: t.id,
+      teacherId: t.teacher_id,
+      subjectId: t.subject_id,
+      groupId: t.group_id
+    }));
+  },
+
   async getKeyCompetencies() {
     const { data, error } = await supabase.from('key_competencies').select('*');
     if (error || !data || data.length === 0) return seed.keyCompetencies;
@@ -567,6 +583,11 @@ export const dataService = {
   async getTeacherAssignments(teacherId: string): Promise<TeacherSubjectGroup[]> {
     if (useSupabase) return supabaseDataService.getTeacherAssignments(teacherId);
     return seed.teacherSubjectGroups.filter(tsg => tsg.teacherId === teacherId);
+  },
+
+  async getAllTeacherAssignments(): Promise<TeacherSubjectGroup[]> {
+    if (useSupabase) return supabaseDataService.getAllTeacherAssignments();
+    return seed.teacherSubjectGroups;
   },
 
   // CRUD para Grupos

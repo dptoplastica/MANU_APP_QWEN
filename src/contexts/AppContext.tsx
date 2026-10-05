@@ -73,18 +73,53 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         const connected = await dataService.init();
         setSupabaseConnected(connected);
 
+        let user = null;
+
         // Verificar si hay sesión activa en Supabase
         if (connected) {
-          const user = await dataService.getCurrentUser();
+          user = await dataService.getCurrentUser();
           if (user) {
             setCurrentUser(user);
             setIsAuthenticated(true);
           }
         }
 
-        // Cargar calificaciones
-        const initialGrades = await dataService.getGrades();
-        setGrades(initialGrades);
+        // Cargar todos los datos desde Supabase si está conectado
+        if (connected) {
+          console.log('Loading data from Supabase...');
+          
+          const [supabaseGroups, supabaseStudents, supabaseAssignments, supabaseGrades] = await Promise.all([
+            dataService.getGroups(),
+            dataService.getStudents(),
+            dataService.getAllTeacherAssignments(),
+            dataService.getGrades()
+          ]);
+
+          // Actualizar estados con datos de Supabase
+          if (supabaseGroups.length > 0) {
+            setGroups(supabaseGroups);
+            console.log('Groups loaded from Supabase:', supabaseGroups.length);
+          }
+          
+          if (supabaseStudents.length > 0) {
+            setStudents(supabaseStudents);
+            console.log('Students loaded from Supabase:', supabaseStudents.length);
+          }
+          
+          if (supabaseAssignments.length > 0) {
+            setTeacherSubjectGroups(supabaseAssignments);
+            console.log('Assignments loaded from Supabase:', supabaseAssignments.length);
+          }
+          
+          setGrades(supabaseGrades);
+          console.log('Grades loaded from Supabase:', supabaseGrades.length);
+        } else {
+          // Fallback a datos locales si Supabase no está conectado
+          console.log('Supabase not connected, using local seed data');
+          const studentIds = seed.students.map(s => s.id);
+          const localGrades = seed.generateGrades(seed.allActivities, studentIds);
+          setGrades(localGrades);
+        }
       } catch (error) {
         console.warn('Error initializing app, using local data:', error);
         // Fallback a datos locales
