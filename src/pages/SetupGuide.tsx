@@ -358,6 +358,43 @@ export const SetupGuide: React.FC = () => {
               <pre className="text-xs text-green-400 font-mono whitespace-pre">{step7SQL}</pre>
             </div>
           </div>
+
+          {/* Step 8 - FIX RLS RECURSION */}
+          <div className="border-l-4 border-red-500 pl-4">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-semibold text-gray-800">Paso 8: CORREGIR Recursión Infinita en RLS (CRÍTICO)</h3>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => copyToClipboard(fixRlsSQL, 'fix-rls')}
+                  className="flex items-center gap-1 px-2 py-1 text-xs bg-red-100 hover:bg-red-200 rounded text-red-700"
+                >
+                  {copiedStep === 'fix-rls' ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                  {copiedStep === 'fix-rls' ? 'Copiado' : 'Copiar SQL'}
+                </button>
+                <button
+                  onClick={() => downloadFile(fixRlsSQL, 'fix-rls-recursion.sql')}
+                  className="flex items-center gap-1 px-2 py-1 text-xs bg-red-100 hover:bg-red-200 rounded text-red-700"
+                >
+                  <Download className="w-3 h-3" /> Descargar
+                </button>
+              </div>
+            </div>
+            <div className="bg-red-50 border-2 border-red-300 rounded-lg p-3 mb-3">
+              <p className="text-sm text-red-800 font-bold">
+                🚨 CRÍTICO: Si el diagnóstico muestra "infinite recursion detected in policy for relation users", 
+                DEBES ejecutar este script para corregir el problema.
+              </p>
+              <p className="text-sm text-red-700 mt-2">
+                Este script elimina las políticas recursivas y crea políticas correctas que no causan bucles infinitos.
+              </p>
+            </div>
+            <p className="text-sm text-gray-600 mb-3">
+              Ejecuta este SQL para corregir la recursión infinita:
+            </p>
+            <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto max-h-64 overflow-y-auto">
+              <pre className="text-xs text-green-400 font-mono whitespace-pre">{fixRlsSQL}</pre>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -483,3 +520,177 @@ CREATE POLICY "Teachers can update students" ON students
 DROP POLICY IF EXISTS "Teachers can insert assignments" ON teacher_subject_groups;
 CREATE POLICY "Teachers can insert assignments" ON teacher_subject_groups
   FOR INSERT WITH CHECK (true);`;
+
+const fixRlsSQL = `-- ============================================================
+-- CORRECCIÓN: Políticas RLS sin recursión infinita
+-- ============================================================
+
+-- Eliminar la política problemática en la tabla users
+DROP POLICY IF EXISTS "Admins have full access to all tables" ON users;
+
+-- Crear políticas correctas para la tabla users
+-- Política 1: Los usuarios pueden ver su propio perfil
+DROP POLICY IF EXISTS "Users can view own profile" ON users;
+CREATE POLICY "Users can view own profile" ON users
+  FOR SELECT
+  USING (auth.uid() = id);
+
+-- Política 2: Los administradores pueden ver todos los perfiles
+-- Esta política NO consulta la tabla users, evita la recursión
+DROP POLICY IF EXISTS "Admins can view all profiles" ON users;
+CREATE POLICY "Admins can view all profiles" ON users
+  FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM auth.users 
+      WHERE auth.users.id = users.id 
+      AND auth.users.email = 'admin@ieslopedevega.es'
+    )
+  );
+
+-- Política 3: Los administradores pueden insertar perfiles
+DROP POLICY IF EXISTS "Admins can insert profiles" ON users;
+CREATE POLICY "Admins can insert profiles" ON users
+  FOR INSERT
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM auth.users 
+      WHERE auth.users.id = users.id 
+      AND auth.users.email = 'admin@ieslopedevega.es'
+    )
+  );
+
+-- Política 4: Los administradores pueden actualizar perfiles
+DROP POLICY IF EXISTS "Admins can update profiles" ON users;
+CREATE POLICY "Admins can update profiles" ON users
+  FOR UPDATE
+  USING (
+    EXISTS (
+      SELECT 1 FROM auth.users 
+      WHERE auth.users.id = users.id 
+      AND auth.users.email = 'admin@ieslopedevega.es'
+    )
+  );
+
+-- ============================================================
+-- Políticas para otras tablas (sin recursión)
+-- ============================================================
+
+-- Grupos: Admins pueden hacer todo
+DROP POLICY IF EXISTS "Admins can manage groups" ON groups;
+CREATE POLICY "Admins can manage groups" ON groups
+  FOR ALL
+  USING (
+    EXISTS (
+      SELECT 1 FROM auth.users 
+      WHERE auth.users.id = (SELECT id FROM users WHERE id = auth.uid())
+      AND auth.users.email = 'admin@ieslopedevega.es'
+    )
+  );
+
+-- Estudiantes: Admins pueden hacer todo
+DROP POLICY IF EXISTS "Admins can manage students" ON students;
+CREATE POLICY "Admins can manage students" ON students
+  FOR ALL
+  USING (
+    EXISTS (
+      SELECT 1 FROM auth.users 
+      WHERE auth.users.id = (SELECT id FROM users WHERE id = auth.uid())
+      AND auth.users.email = 'admin@ieslopedevega.es'
+    )
+  );
+
+-- Asignaciones: Admins pueden hacer todo
+DROP POLICY IF EXISTS "Admins can manage assignments" ON teacher_subject_groups;
+CREATE POLICY "Admins can manage assignments" ON teacher_subject_groups
+  FOR ALL
+  USING (
+    EXISTS (
+      SELECT 1 FROM auth.users 
+      WHERE auth.users.id = (SELECT id FROM users WHERE id = auth.uid())
+      AND auth.users.email = 'admin@ieslopedevega.es'
+    )
+  );
+
+-- Materias: Admins pueden hacer todo
+DROP POLICY IF EXISTS "Admins can manage subjects" ON subjects;
+CREATE POLICY "Admins can manage subjects" ON subjects
+  FOR ALL
+  USING (
+    EXISTS (
+      SELECT 1 FROM auth.users 
+      WHERE auth.users.id = (SELECT id FROM users WHERE id = auth.uid())
+      AND auth.users.email = 'admin@ieslopedevega.es'
+    )
+  );
+
+-- Actividades: Admins pueden hacer todo
+DROP POLICY IF EXISTS "Admins can manage activities" ON activities;
+CREATE POLICY "Admins can manage activities" ON activities
+  FOR ALL
+  USING (
+    EXISTS (
+      SELECT 1 FROM auth.users 
+      WHERE auth.users.id = (SELECT id FROM users WHERE id = auth.uid())
+      AND auth.users.email = 'admin@ieslopedevega.es'
+    )
+  );
+
+-- Calificaciones: Admins pueden hacer todo
+DROP POLICY IF EXISTS "Admins can manage grades" ON grades;
+CREATE POLICY "Admins can manage grades" ON grades
+  FOR ALL
+  USING (
+    EXISTS (
+      SELECT 1 FROM auth.users 
+      WHERE auth.users.id = (SELECT id FROM users WHERE id = auth.uid())
+      AND auth.users.email = 'admin@ieslopedevega.es'
+    )
+  );
+
+-- ============================================================
+-- Políticas para profesores (lectura)
+-- ============================================================
+
+-- Profesores pueden ver sus asignaciones
+DROP POLICY IF EXISTS "Teachers can view own assignments" ON teacher_subject_groups;
+CREATE POLICY "Teachers can view own assignments" ON teacher_subject_groups
+  FOR SELECT
+  USING (teacher_id = auth.uid());
+
+-- Profesores pueden ver sus materias
+DROP POLICY IF EXISTS "Teachers can view own subjects" ON subjects;
+CREATE POLICY "Teachers can view own subjects" ON subjects
+  FOR SELECT
+  USING (
+    id IN (
+      SELECT subject_id FROM teacher_subject_groups 
+      WHERE teacher_id = auth.uid()
+    )
+  );
+
+-- Profesores pueden ver sus grupos
+DROP POLICY IF EXISTS "Teachers can view own groups" ON groups;
+CREATE POLICY "Teachers can view own groups" ON groups
+  FOR SELECT
+  USING (
+    id IN (
+      SELECT group_id FROM teacher_subject_groups 
+      WHERE teacher_id = auth.uid()
+    )
+  );
+
+-- Profesores pueden ver alumnos de sus grupos
+DROP POLICY IF EXISTS "Teachers can view own students" ON students;
+CREATE POLICY "Teachers can view own students" ON students
+  FOR SELECT
+  USING (
+    group_id IN (
+      SELECT group_id FROM teacher_subject_groups 
+      WHERE teacher_id = auth.uid()
+    )
+  );
+
+-- ============================================================
+-- FIN DE CORRECCIÓN
+-- ============================================================`;
