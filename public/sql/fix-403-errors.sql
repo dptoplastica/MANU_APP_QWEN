@@ -1,78 +1,81 @@
 -- ============================================================
--- SOLUCIÓN COMPLETA: Políticas RLS sin errores 403 ni recursión
--- Ejecutar este script en Supabase SQL Editor
+-- CORRECCIÓN DE POLÍTICAS RLS - VERSIÓN ACTUALIZADA
+-- Este script es seguro para ejecutar múltiples veces
 -- ============================================================
 
--- ============================================================
--- PASO 1: Deshabilitar RLS temporalmente para limpiar políticas
--- ============================================================
-ALTER TABLE users DISABLE ROW LEVEL SECURITY;
-ALTER TABLE groups DISABLE ROW LEVEL SECURITY;
-ALTER TABLE students DISABLE ROW LEVEL SECURITY;
-ALTER TABLE teacher_subject_groups DISABLE ROW LEVEL SECURITY;
-ALTER TABLE subjects DISABLE ROW LEVEL SECURITY;
-ALTER TABLE activities DISABLE ROW LEVEL SECURITY;
-ALTER TABLE grades DISABLE ROW LEVEL SECURITY;
-ALTER TABLE learning_situations DISABLE ROW LEVEL SECURITY;
-ALTER TABLE programmes DISABLE ROW LEVEL SECURITY;
-ALTER TABLE key_competencies DISABLE ROW LEVEL SECURITY;
-ALTER TABLE specific_competencies DISABLE ROW LEVEL SECURITY;
-ALTER TABLE evaluation_criteria DISABLE ROW LEVEL SECURITY;
-ALTER TABLE basic_knowledge DISABLE ROW LEVEL SECURITY;
-
--- ============================================================
--- PASO 2: Eliminar todas las políticas existentes
+-- PASO 1: Eliminar todas las políticas existentes
 -- ============================================================
 
--- Users
+-- Tabla users
+DROP POLICY IF EXISTS "admin_all_users" ON users;
+DROP POLICY IF EXISTS "teacher_view_own_profile" ON users;
 DROP POLICY IF EXISTS "Admins have full access to all tables" ON users;
 DROP POLICY IF EXISTS "Users can view own profile" ON users;
 DROP POLICY IF EXISTS "Admins can view all profiles" ON users;
-DROP POLICY IF EXISTS "Admins can insert profiles" ON users;
-DROP POLICY IF EXISTS "Admins can update profiles" ON users;
 
--- Groups
-DROP POLICY IF EXISTS "Admins can manage groups" ON groups;
+-- Tabla groups
+DROP POLICY IF EXISTS "admin_all_groups" ON groups;
+DROP POLICY IF EXISTS "teacher_view_groups" ON groups;
 DROP POLICY IF EXISTS "Teachers can view own groups" ON groups;
 DROP POLICY IF EXISTS "Teachers can insert groups" ON groups;
 DROP POLICY IF EXISTS "Teachers can update groups" ON groups;
+DROP POLICY IF EXISTS "Admins can manage groups" ON groups;
 
--- Students
-DROP POLICY IF EXISTS "Admins can manage students" ON students;
+-- Tabla students
+DROP POLICY IF EXISTS "admin_all_students" ON students;
+DROP POLICY IF EXISTS "teacher_view_students" ON students;
 DROP POLICY IF EXISTS "Teachers can view own students" ON students;
 DROP POLICY IF EXISTS "Teachers can insert students" ON students;
 DROP POLICY IF EXISTS "Teachers can update students" ON students;
+DROP POLICY IF EXISTS "Admins can manage students" ON students;
 
--- Teacher Subject Groups
-DROP POLICY IF EXISTS "Admins can manage assignments" ON teacher_subject_groups;
+-- Tabla teacher_subject_groups
+DROP POLICY IF EXISTS "admin_all_assignments" ON teacher_subject_groups;
+DROP POLICY IF EXISTS "teacher_view_assignments" ON teacher_subject_groups;
 DROP POLICY IF EXISTS "Teachers can view own assignments" ON teacher_subject_groups;
 DROP POLICY IF EXISTS "Teachers can insert assignments" ON teacher_subject_groups;
+DROP POLICY IF EXISTS "Admins can manage assignments" ON teacher_subject_groups;
 
--- Subjects
-DROP POLICY IF EXISTS "Admins can manage subjects" ON subjects;
+-- Tabla subjects
+DROP POLICY IF EXISTS "admin_all_subjects" ON subjects;
+DROP POLICY IF EXISTS "teacher_view_subjects" ON subjects;
 DROP POLICY IF EXISTS "Teachers can view own subjects" ON subjects;
+DROP POLICY IF EXISTS "Admins can manage subjects" ON subjects;
 
--- Activities
-DROP POLICY IF EXISTS "Admins can manage activities" ON activities;
+-- Tabla activities
+DROP POLICY IF EXISTS "admin_all_activities" ON activities;
+DROP POLICY IF EXISTS "teacher_view_activities" ON activities;
 DROP POLICY IF EXISTS "Teachers can view own activities" ON activities;
+DROP POLICY IF EXISTS "Admins can manage activities" ON activities;
 
--- Grades
-DROP POLICY IF EXISTS "Admins can manage grades" ON grades;
+-- Tabla grades
+DROP POLICY IF EXISTS "admin_all_grades" ON grades;
+DROP POLICY IF EXISTS "teacher_manage_grades" ON grades;
 DROP POLICY IF EXISTS "Teachers can manage own grades" ON grades;
+DROP POLICY IF EXISTS "Admins can manage grades" ON grades;
 
--- Learning Situations
-DROP POLICY IF EXISTS "Admins can manage learning_situations" ON learning_situations;
+-- Tabla learning_situations
+DROP POLICY IF EXISTS "admin_all_learning_situations" ON learning_situations;
+DROP POLICY IF EXISTS "teacher_view_learning_situations" ON learning_situations;
 DROP POLICY IF EXISTS "Teachers can view own learning_situations" ON learning_situations;
+DROP POLICY IF EXISTS "Admins can manage learning_situations" ON learning_situations;
 
--- Programmes
-DROP POLICY IF EXISTS "Admins can manage programmes" ON programmes;
+-- Tabla programmes
+DROP POLICY IF EXISTS "admin_all_programmes" ON programmes;
+DROP POLICY IF EXISTS "teacher_view_programmes" ON programmes;
 DROP POLICY IF EXISTS "Teachers can view own programmes" ON programmes;
+DROP POLICY IF EXISTS "Admins can manage programmes" ON programmes;
+
+-- Tablas de datos curriculares
+DROP POLICY IF EXISTS "public_view_key_competencies" ON key_competencies;
+DROP POLICY IF EXISTS "public_view_specific_competencies" ON specific_competencies;
+DROP POLICY IF EXISTS "public_view_evaluation_criteria" ON evaluation_criteria;
+DROP POLICY IF EXISTS "public_view_basic_knowledge" ON basic_knowledge;
 
 -- ============================================================
--- PASO 3: Crear nuevas políticas simplificadas
+-- PASO 2: Crear función auxiliar is_admin()
 -- ============================================================
 
--- Función auxiliar para verificar si es administrador
 CREATE OR REPLACE FUNCTION is_admin() RETURNS BOOLEAN AS $$
 BEGIN
   RETURN EXISTS (
@@ -84,7 +87,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- ============================================================
--- POLÍTICAS PARA ADMINISTRADOR (acceso completo)
+-- PASO 3: Crear nuevas políticas para ADMINISTRADOR
 -- ============================================================
 
 -- Users: Admin puede hacer todo
@@ -142,7 +145,7 @@ CREATE POLICY "admin_all_programmes" ON programmes
   WITH CHECK (is_admin());
 
 -- ============================================================
--- POLÍTICAS PARA PROFESORES (acceso limitado)
+-- PASO 4: Crear políticas para PROFESORES
 -- ============================================================
 
 -- Users: Profesor puede ver su propio perfil
@@ -238,7 +241,7 @@ CREATE POLICY "teacher_view_programmes" ON programmes
   );
 
 -- ============================================================
--- POLÍTICAS PÚBLICAS (datos curriculares)
+-- PASO 5: Crear políticas públicas (datos curriculares)
 -- ============================================================
 
 -- Key Competencies: Todos pueden ver
@@ -262,31 +265,9 @@ CREATE POLICY "public_view_basic_knowledge" ON basic_knowledge
   USING (true);
 
 -- ============================================================
--- PASO 4: Rehabilitar RLS
--- ============================================================
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE groups ENABLE ROW LEVEL SECURITY;
-ALTER TABLE students ENABLE ROW LEVEL SECURITY;
-ALTER TABLE teacher_subject_groups ENABLE ROW LEVEL SECURITY;
-ALTER TABLE subjects ENABLE ROW LEVEL SECURITY;
-ALTER TABLE activities ENABLE ROW LEVEL SECURITY;
-ALTER TABLE grades ENABLE ROW LEVEL SECURITY;
-ALTER TABLE learning_situations ENABLE ROW LEVEL SECURITY;
-ALTER TABLE programmes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE key_competencies ENABLE ROW LEVEL SECURITY;
-ALTER TABLE specific_competencies ENABLE ROW LEVEL SECURITY;
-ALTER TABLE evaluation_criteria ENABLE ROW LEVEL SECURITY;
-ALTER TABLE basic_knowledge ENABLE ROW LEVEL SECURITY;
-
--- ============================================================
 -- FIN DEL SCRIPT
 -- ============================================================
--- Este script:
--- 1. Deshabilita RLS temporalmente
--- 2. Elimina todas las políticas antiguas
--- 3. Crea una función auxiliar is_admin() para evitar recursión
--- 4. Crea políticas simplificadas para admin y profesores
--- 5. Rehabilita RLS
--- 
--- Ejecutar este script completo para resolver los errores 403
+-- Este script es idempotente: puede ejecutarse múltiples veces
+-- sin causar errores. Primero elimina las políticas existentes
+-- y luego crea las nuevas.
 -- ============================================================
