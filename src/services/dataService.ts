@@ -300,6 +300,8 @@ export const supabaseDataService = {
 
   // CRUD para Grupos
   async createGroup(group: Group): Promise<Group | null> {
+    console.log('Creating group with data:', group);
+    
     const { data, error } = await supabase
       .from('groups')
       .insert({
@@ -311,9 +313,12 @@ export const supabaseDataService = {
       .single();
     
     if (error) {
-      console.error('Error creating group:', error.message);
+      console.error('Error creating group:', error);
+      console.error('Error details:', error.message, error.details, error.hint);
       return null;
     }
+    
+    console.log('Group created successfully:', data);
     
     return {
       id: data.id,

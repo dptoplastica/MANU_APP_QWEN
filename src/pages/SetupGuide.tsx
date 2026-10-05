@@ -324,6 +324,40 @@ export const SetupGuide: React.FC = () => {
               <pre className="text-xs text-green-400 font-mono whitespace-pre">{step6SQL}</pre>
             </div>
           </div>
+
+          {/* Step 7 */}
+          <div className="border-l-4 border-orange-500 pl-4">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-semibold text-gray-800">Paso 7: Configurar políticas de seguridad (IMPORTANTE)</h3>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => copyToClipboard(step7SQL, 'step7')}
+                  className="flex items-center gap-1 px-2 py-1 text-xs bg-orange-100 hover:bg-orange-200 rounded text-orange-700"
+                >
+                  {copiedStep === 'step7' ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                  {copiedStep === 'step7' ? 'Copiado' : 'Copiar SQL'}
+                </button>
+                <button
+                  onClick={() => downloadFile(step7SQL, 'policies-admin.sql')}
+                  className="flex items-center gap-1 px-2 py-1 text-xs bg-orange-100 hover:bg-orange-200 rounded text-orange-700"
+                >
+                  <Download className="w-3 h-3" /> Descargar
+                </button>
+              </div>
+            </div>
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-3">
+              <p className="text-sm text-orange-800">
+                <strong>⚠️ IMPORTANTE:</strong> Este script configura las políticas de seguridad (RLS) que permiten al administrador crear, editar y eliminar grupos, alumnos y asignaciones.
+                Sin ejecutar este script, el panel de administración no podrá guardar cambios.
+              </p>
+            </div>
+            <p className="text-sm text-gray-600 mb-3">
+              Ejecuta este SQL para configurar los permisos de seguridad:
+            </p>
+            <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto max-h-64 overflow-y-auto">
+              <pre className="text-xs text-green-400 font-mono whitespace-pre">{step7SQL}</pre>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -379,3 +413,73 @@ FROM (VALUES
   ('b0000000-0000-0000-0000-000000000002'::uuid, 'c0000000-0000-0000-0000-000000000001'::uuid),
   ('b0000000-0000-0000-0000-000000000003'::uuid, 'c0000000-0000-0000-0000-000000000003'::uuid)
 ) AS assignments(subject_id, group_id);`;
+
+const step7SQL = `-- Políticas RLS para administrador
+-- Ejecutar este script para permitir que el admin gestione todos los datos
+
+-- Política para que el admin pueda ver todos los grupos
+DROP POLICY IF EXISTS "Admins can view all groups" ON groups;
+CREATE POLICY "Admins can view all groups" ON groups
+  FOR ALL USING (
+    EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
+  );
+
+-- Política para que el admin pueda ver todos los alumnos
+DROP POLICY IF EXISTS "Admins can view all students" ON students;
+CREATE POLICY "Admins can view all students" ON students
+  FOR ALL USING (
+    EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
+  );
+
+-- Política para que el admin pueda ver todas las asignaciones
+DROP POLICY IF EXISTS "Admins can view all assignments" ON teacher_subject_groups;
+CREATE POLICY "Admins can view all assignments" ON teacher_subject_groups
+  FOR ALL USING (
+    EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
+  );
+
+-- Política para que el admin pueda ver todas las materias
+DROP POLICY IF EXISTS "Admins can view all subjects" ON subjects;
+CREATE POLICY "Admins can view all subjects" ON subjects
+  FOR ALL USING (
+    EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
+  );
+
+-- Política para que el admin pueda ver todas las actividades
+DROP POLICY IF EXISTS "Admins can view all activities" ON activities;
+CREATE POLICY "Admins can view all activities" ON activities
+  FOR ALL USING (
+    EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
+  );
+
+-- Política para que el admin pueda ver todas las calificaciones
+DROP POLICY IF EXISTS "Admins can view all grades" ON grades;
+CREATE POLICY "Admins can view all grades" ON grades
+  FOR ALL USING (
+    EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
+  );
+
+-- Permitir que los profesores inserten grupos
+DROP POLICY IF EXISTS "Teachers can insert groups" ON groups;
+CREATE POLICY "Teachers can insert groups" ON groups
+  FOR INSERT WITH CHECK (true);
+
+-- Permitir que los profesores actualicen grupos
+DROP POLICY IF EXISTS "Teachers can update groups" ON groups;
+CREATE POLICY "Teachers can update groups" ON groups
+  FOR UPDATE USING (true);
+
+-- Permitir que los profesores inserten alumnos
+DROP POLICY IF EXISTS "Teachers can insert students" ON students;
+CREATE POLICY "Teachers can insert students" ON students
+  FOR INSERT WITH CHECK (true);
+
+-- Permitir que los profesores actualicen alumnos
+DROP POLICY IF EXISTS "Teachers can update students" ON students;
+CREATE POLICY "Teachers can update students" ON students
+  FOR UPDATE USING (true);
+
+-- Permitir que los profesores inserten asignaciones
+DROP POLICY IF EXISTS "Teachers can insert assignments" ON teacher_subject_groups;
+CREATE POLICY "Teachers can insert assignments" ON teacher_subject_groups
+  FOR INSERT WITH CHECK (true);`;

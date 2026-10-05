@@ -93,11 +93,14 @@ export const Admin: React.FC = () => {
           setSubjectsList([...subjectsList, newItem]);
           break;
         case 'groups':
+          console.log('Creating group:', newItem);
           const createdGroup = await createGroup(newItem as Group);
+          console.log('Created group result:', createdGroup);
           if (createdGroup) {
             setGroupsList([...groupsList, createdGroup]);
+            closeModal();
           } else {
-            alert('Error al crear el grupo. Verifica que todos los campos estén completos.');
+            alert('Error al crear el grupo. Verifica que todos los campos estén completos y que tengas permisos de administrador.');
           }
           break;
         case 'students':
