@@ -11,6 +11,7 @@ export const SetupGuide: React.FC = () => {
   const [copiedStep, setCopiedStep] = useState<string | null>(null);
 
   const [setupCompletoContent, setSetupCompletoContent] = useState<string>('');
+  const [fixUsersContent, setFixUsersContent] = useState<string>('');
 
   useEffect(() => {
     // Cargar los archivos SQL
@@ -28,6 +29,11 @@ export const SetupGuide: React.FC = () => {
       .then(r => r.text())
       .then(setSetupCompletoContent)
       .catch(() => setSetupCompletoContent('-- No se pudo cargar setup-completo.sql'));
+
+    fetch('/sql/fix-users-permissions.sql')
+      .then(r => r.text())
+      .then(setFixUsersContent)
+      .catch(() => setFixUsersContent('-- No se pudo cargar fix-users-permissions.sql'));
   }, []);
 
   const copyToClipboard = (text: string, stepId: string) => {
@@ -151,6 +157,19 @@ export const SetupGuide: React.FC = () => {
             </div>
             <Download className="w-4 h-4 text-purple-600" />
           </button>
+          <button
+            onClick={() => downloadFile(fixUsersContent, 'fix-users-permissions.sql')}
+            className="flex items-center gap-3 p-4 bg-white border-2 border-orange-400 rounded-lg hover:bg-orange-50 transition-colors text-left sm:col-span-3"
+          >
+            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <AlertCircle className="w-5 h-5 text-orange-600" />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-gray-800 text-sm">fix-users-permissions.sql</p>
+              <p className="text-xs text-gray-500">Corregir error 500 en tabla users</p>
+            </div>
+            <Download className="w-4 h-4 text-orange-600" />
+          </button>
         </div>
       </div>
 
@@ -205,6 +224,43 @@ export const SetupGuide: React.FC = () => {
             </div>
             <p className="text-sm text-gray-600 mb-3">
               Copia y pega este SQL en el editor, luego haz clic en <strong>Run</strong>.
+            </p>
+          </div>
+
+          {/* Step 2.5 - Fix Users Permissions */}
+          <div className="border-l-4 border-orange-500 pl-4">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-semibold text-gray-800">Paso 2.5: Corregir error 500 en tabla users (SI APARECE)</h3>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => copyToClipboard(fixUsersContent, 'fix-users')}
+                  className="flex items-center gap-1 px-2 py-1 text-xs bg-orange-100 hover:bg-orange-200 rounded text-orange-700"
+                >
+                  {copiedStep === 'fix-users' ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                  {copiedStep === 'fix-users' ? 'Copiado' : 'Copiar'}
+                </button>
+                <button
+                  onClick={() => downloadFile(fixUsersContent, 'fix-users-permissions.sql')}
+                  className="flex items-center gap-1 px-2 py-1 text-xs bg-orange-100 hover:bg-orange-200 rounded text-orange-700"
+                >
+                  <Download className="w-3 h-3" /> Descargar
+                </button>
+              </div>
+            </div>
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-3">
+              <p className="text-sm text-orange-800">
+                <strong>⚠️ Solo si ves este error en la consola:</strong>
+              </p>
+              <code className="block bg-orange-100 text-orange-900 px-3 py-2 rounded text-xs font-mono mt-2">
+                Failed to load resource: the server responded with a status of 500 ()<br/>
+                sbymwyxjuxhkilwcxoed.supabase.co/rest/v1/users?select=*
+              </code>
+              <p className="text-sm text-orange-800 mt-2">
+                Si ves este error, ejecuta <code className="bg-orange-100 px-1 rounded">fix-users-permissions.sql</code> para corregir los permisos de la tabla users.
+              </p>
+            </div>
+            <p className="text-sm text-gray-600 mb-3">
+              Este script corrige los permisos RLS de la tabla users y crea las columnas necesarias.
             </p>
           </div>
 

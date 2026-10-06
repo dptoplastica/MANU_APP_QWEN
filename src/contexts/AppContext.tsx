@@ -95,27 +95,25 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             dataService.getGrades()
           ]);
 
-          // Actualizar estados con datos de Supabase
-          if (supabaseGroups.length > 0) {
-            setGroups(supabaseGroups);
-            console.log('Groups loaded from Supabase:', supabaseGroups.length);
-          }
+          // REEMPLAZAR completamente los datos locales con datos de Supabase
+          // No mezclar datos locales con datos de Supabase
+          setGroups(supabaseGroups);
+          console.log('Groups loaded from Supabase:', supabaseGroups.length);
           
-          if (supabaseStudents.length > 0) {
-            setStudents(supabaseStudents);
-            console.log('Students loaded from Supabase:', supabaseStudents.length);
-          }
+          setStudents(supabaseStudents);
+          console.log('Students loaded from Supabase:', supabaseStudents.length);
           
-          if (supabaseAssignments.length > 0) {
-            setTeacherSubjectGroups(supabaseAssignments);
-            console.log('Assignments loaded from Supabase:', supabaseAssignments.length);
-          }
+          setTeacherSubjectGroups(supabaseAssignments);
+          console.log('Assignments loaded from Supabase:', supabaseAssignments.length);
           
           setGrades(supabaseGrades);
           console.log('Grades loaded from Supabase:', supabaseGrades.length);
         } else {
           // Fallback a datos locales si Supabase no está conectado
           console.log('Supabase not connected, using local seed data');
+          setGroups(seed.groups);
+          setStudents(seed.students);
+          setTeacherSubjectGroups(seed.teacherSubjectGroups);
           const studentIds = seed.students.map(s => s.id);
           const localGrades = seed.generateGrades(seed.allActivities, studentIds);
           setGrades(localGrades);
@@ -123,6 +121,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       } catch (error) {
         console.warn('Error initializing app, using local data:', error);
         // Fallback a datos locales
+        setGroups(seed.groups);
+        setStudents(seed.students);
+        setTeacherSubjectGroups(seed.teacherSubjectGroups);
         const studentIds = seed.students.map(s => s.id);
         const localGrades = seed.generateGrades(seed.allActivities, studentIds);
         setGrades(localGrades);
