@@ -66,29 +66,54 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     { id: 'n6', userId: 'user-admin', message: 'Programación didáctica actualizada correctamente', read: true, createdAt: '2026-09-15' }
   ]);
 
+  // Función para cargar datos locales del seed
+  const loadLocalData = () => {
+    console.log('📦 Cargando datos locales del seed...');
+    setGroups(seed.groups);
+    setStudents(seed.students);
+    setTeacherSubjectGroups(seed.teacherSubjectGroups);
+    setLearningSituations(seed.allLearningSituations);
+    setActivities(seed.allActivities);
+    setProgrammes(seed.programmes);
+    const studentIds = seed.students.map(s => s.id);
+    const localGrades = seed.generateGrades(seed.allActivities, studentIds);
+    setGrades(localGrades);
+    console.log('📦 Datos locales cargados:', {
+      groups: seed.groups.length,
+      students: seed.students.length,
+      assignments: seed.teacherSubjectGroups.length,
+      activities: seed.allActivities.length,
+      grades: localGrades.length
+    });
+  };
+
   // Inicializar: verificar Supabase y cargar datos
   useEffect(() => {
     const init = async () => {
       try {
         // Verificar conexión con Supabase
         const connected = await dataService.init();
-        setSupabaseConnected(connected);
-
-        let user = null;
-
-        // Verificar si hay sesión activa en Supabase
+        
+        // Verificar si hay sesión activa en Supabase Auth
+        let supabaseUser = null;
         if (connected) {
-          user = await dataService.getCurrentUser();
-          if (user) {
-            setCurrentUser(user);
-            setIsAuthenticated(true);
-          }
+          supabaseUser = await dataService.getCurrentUser();
         }
-
-        // Cargar todos los datos desde Supabase si está conectado
-        if (connected) {
-          console.log('Loading data from Supabase...');
+        
+        // DECISIÓN CRÍTICA: ¿Usar Supabase o modo local?
+        // Solo usamos Supabase si AMBAS condiciones se cumplen:
+        // 1. La conexión a Supabase funciona
+        // 2. Hay un usuario autenticado en Supabase Auth
+        const useSupabaseMode = connected && supabaseUser !== null;
+        
+        setSupabaseConnected(useSupabaseMode);
+        
+        if (useSupabaseMode) {
+          console.log('🌐 Modo SUPABASE activado');
+          setCurrentUser(supabaseUser);
+          setIsAuthenticated(true);
           
+          // Cargar TODOS los datos desde Supabase
           const [supabaseGroups, supabaseStudents, supabaseAssignments, supabaseGrades] = await Promise.all([
             dataService.getGroups(),
             dataService.getStudents(),
@@ -96,38 +121,31 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             dataService.getGrades()
           ]);
 
-          // REEMPLAZAR completamente los datos locales con datos de Supabase
-          // No mezclar datos locales con datos de Supabase
           setGroups(supabaseGroups);
-          console.log('Groups loaded from Supabase:', supabaseGroups.length);
-          
           setStudents(supabaseStudents);
-          console.log('Students loaded from Supabase:', supabaseStudents.length);
-          
           setTeacherSubjectGroups(supabaseAssignments);
-          console.log('Assignments loaded from Supabase:', supabaseAssignments.length);
-          
           setGrades(supabaseGrades);
-          console.log('Grades loaded from Supabase:', supabaseGrades.length);
+          
+          console.log('🌐 Datos cargados desde Supabase:', {
+            groups: supabaseGroups.length,
+            students: supabaseStudents.length,
+            assignments: supabaseAssignments.length,
+            grades: supabaseGrades.length
+          });
         } else {
-          // Fallback a datos locales si Supabase no está conectado
-          console.log('Supabase not connected, using local seed data');
-          setGroups(seed.groups);
-          setStudents(seed.students);
-          setTeacherSubjectGroups(seed.teacherSubjectGroups);
-          const studentIds = seed.students.map(s => s.id);
-          const localGrades = seed.generateGrades(seed.allActivities, studentIds);
-          setGrades(localGrades);
+          console.log('📦 Modo LOCAL activado (Supabase Auth no disponible)');
+          if (connected && !supabaseUser) {
+            console.log('⚠️ Supabase conectado pero sin sesión activa');
+          } else if (!connected) {
+            console.log('⚠️ Supabase no conectado');
+          }
+          // Cargar TODOS los datos locales
+          loadLocalData();
         }
       } catch (error) {
-        console.warn('Error initializing app, using local data:', error);
-        // Fallback a datos locales
-        setGroups(seed.groups);
-        setStudents(seed.students);
-        setTeacherSubjectGroups(seed.teacherSubjectGroups);
-        const studentIds = seed.students.map(s => s.id);
-        const localGrades = seed.generateGrades(seed.allActivities, studentIds);
-        setGrades(localGrades);
+        console.warn('❌ Error inicializando, usando modo local:', error);
+        setSupabaseConnected(false);
+        loadLocalData();
       } finally {
         setIsLoading(false);
       }
@@ -148,6 +166,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           console.log('📦 ⚠️ ATENCIÓN: Sesión iniciada en MODO LOCAL');
           console.log('📦 Los datos NO se persisten en Supabase');
           console.log('📦 Para persistencia completa, configura Supabase Auth correctamente');
+          
+          // CRÍTICO: Cuando el login es local, FORZAR el uso de datos locales
+          // Esto asegura que los IDs coincidan (user-teacher1, sub-dt1, group-1a, etc.)
+          console.log('📦 Recargando datos locales para que coincidan con el usuario local...');
+          setSupabaseConnected(false);
+          loadLocalData();
         } else {
           console.log('🌐 ✅ Sesión iniciada con Supabase');
           console.log('🌐 Los datos se persisten en Supabase');
