@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../contexts/AppContext';
-import { Database, CheckCircle, AlertCircle, ExternalLink, Copy, Check, Download, FileText, Eye, EyeOff, GraduationCap } from 'lucide-react';
+import { Database, CheckCircle, AlertCircle, ExternalLink, Copy, Check, Download, FileText, Eye, EyeOff, GraduationCap, Link2 } from 'lucide-react';
 
 export const SetupGuide: React.FC = () => {
   const { supabaseConnected } = useApp();
@@ -17,6 +17,7 @@ export const SetupGuide: React.FC = () => {
   const [fixGroupsRlsContent, setFixGroupsRlsContent] = useState<string>('');
   const [fixGroupsPermissionsContent, setFixGroupsPermissionsContent] = useState<string>('');
   const [fixGroupsFinalContent, setFixGroupsFinalContent] = useState<string>('');
+  const [fixAssignmentsFinalContent, setFixAssignmentsFinalContent] = useState<string>('');
 
   useEffect(() => {
     // Cargar los archivos SQL
@@ -64,6 +65,11 @@ export const SetupGuide: React.FC = () => {
       .then(r => r.text())
       .then(setFixGroupsFinalContent)
       .catch(() => setFixGroupsFinalContent('-- No se pudo cargar fix-groups-final.sql'));
+
+    fetch('/sql/fix-assignments-final.sql')
+      .then(r => r.text())
+      .then(setFixAssignmentsFinalContent)
+      .catch(() => setFixAssignmentsFinalContent('-- No se pudo cargar fix-assignments-final.sql'));
   }, []);
 
   const copyToClipboard = (text: string, stepId: string) => {
@@ -265,6 +271,19 @@ export const SetupGuide: React.FC = () => {
             </div>
             <Download className="w-4 h-4 text-red-600" />
           </button>
+          <button
+            onClick={() => downloadFile(fixAssignmentsFinalContent, 'fix-assignments-final.sql')}
+            className="flex items-center gap-3 p-4 bg-white border-2 border-indigo-400 rounded-lg hover:bg-indigo-50 transition-colors text-left sm:col-span-3"
+          >
+            <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Link2 className="w-5 h-5 text-indigo-600" />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-gray-800 text-sm">fix-assignments-final.sql</p>
+              <p className="text-xs text-gray-500">SOLUCIÓN DEFINITIVA: Desactivar RLS en asignaciones (si no se guardan las asignaciones)</p>
+            </div>
+            <Download className="w-4 h-4 text-indigo-600" />
+          </button>
         </div>
       </div>
 
@@ -419,6 +438,104 @@ WHERE id = auth.uid();`}
                 <strong>Políticas RLS:</strong> Si el script de permisos no funciona, ejecuta <code className="bg-purple-100 px-1 rounded text-xs">fix-groups-rls.sql</code>
               </li>
             </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* Instrucciones para asignaciones que no se guardan */}
+      <div className="bg-indigo-50 border-4 border-indigo-500 rounded-xl p-6 shadow-lg">
+        <h3 className="font-bold text-indigo-900 mb-3 flex items-center gap-2 text-xl">
+          <Link2 className="w-6 h-6" /> 🔵 SOLUCIÓN: Asignaciones no se guardan
+        </h3>
+        <p className="text-base text-indigo-800 mb-4 font-medium">
+          Si al crear una asignación de grupo a materia no se guarda o recibes un error, sigue estos pasos:
+        </p>
+        <div className="bg-white rounded-lg p-5 mb-4 border-2 border-indigo-300">
+          <h4 className="font-bold text-gray-900 mb-3 text-lg">📋 Pasos a Seguir:</h4>
+          <ol className="space-y-3 text-sm">
+            <li className="flex items-start gap-2">
+              <span className="bg-indigo-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 font-bold">1</span>
+              <span>
+                <strong>Descarga el script:</strong>{' '}
+                <button
+                  onClick={() => downloadFile(fixAssignmentsFinalContent, 'fix-assignments-final.sql')}
+                  className="text-indigo-600 underline font-bold hover:text-indigo-800"
+                >
+                  fix-assignments-final.sql
+                </button>
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="bg-indigo-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 font-bold">2</span>
+              <span>
+                <strong>Abre el SQL Editor:</strong>{' '}
+                <a
+                  href="https://supabase.com/dashboard/project/sbymwyxjuxhkilwcxoed/sql/new"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 underline font-bold hover:text-blue-800"
+                >
+                  Ir al SQL Editor de Supabase
+                </a>
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="bg-indigo-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 font-bold">3</span>
+              <span><strong>Copia TODO el contenido</strong> del script y pégalo en el SQL Editor</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="bg-indigo-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 font-bold">4</span>
+              <span><strong>Ejecuta el script completo</strong> (botón "Run" o Ctrl+Enter)</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="bg-indigo-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 font-bold">5</span>
+              <span><strong>Recarga la aplicación</strong> con Ctrl+F5</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="bg-indigo-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 font-bold">6</span>
+              <span><strong>Intenta crear una asignación</strong> nuevamente</span>
+            </li>
+          </ol>
+        </div>
+        <div className="space-y-3">
+          <div className="bg-white border border-indigo-200 rounded-lg p-4">
+            <p className="text-sm font-medium text-gray-800 mb-2">🔵 Solución DEFINITIVA (RECOMENDADA):</p>
+            <p className="text-sm text-gray-700 mb-2">
+              Usa el script <code className="bg-indigo-100 px-2 py-0.5 rounded text-indigo-800">fix-assignments-final.sql</code> (botón índigo de arriba)
+            </p>
+            <ol className="text-sm text-gray-700 space-y-1 list-decimal list-inside mt-2">
+              <li>Descarga el script <code className="bg-indigo-100 px-1 rounded text-xs">fix-assignments-final.sql</code></li>
+              <li>Ve al SQL Editor de Supabase</li>
+              <li>Copia y pega TODO el contenido del script</li>
+              <li>Ejecuta el script completo</li>
+              <li>Recarga la aplicación (Ctrl+F5)</li>
+              <li>Intenta crear una asignación nuevamente</li>
+            </ol>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <p className="text-sm font-medium text-gray-800 mb-2">🔍 ¿Qué hace este script?</p>
+            <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
+              <li><strong>Desactiva RLS completamente</strong> en la tabla <code className="bg-gray-100 px-1 rounded text-xs">teacher_subject_groups</code></li>
+              <li>Elimina todas las políticas RLS existentes</li>
+              <li>Permite que cualquier usuario autenticado gestione asignaciones</li>
+              <li>Resuelve problemas de permisos y recursión</li>
+              <li>Es la solución más simple y efectiva</li>
+            </ul>
+          </div>
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <p className="text-sm font-medium text-yellow-800 mb-2">⚠️ IMPORTANTE:</p>
+            <p className="text-sm text-yellow-700 mb-2">
+              Después de ejecutar el script, verifica que tu usuario tenga rol <code className="bg-yellow-100 px-1 rounded text-xs">admin</code>:
+            </p>
+            <pre className="bg-gray-900 text-green-400 p-3 rounded text-xs overflow-x-auto">
+{`-- Verificar tu rol actual
+SELECT role FROM users WHERE id = auth.uid();
+
+-- Si NO eres admin, ejecuta esto:
+UPDATE users 
+SET role = 'admin', active = true
+WHERE id = auth.uid();`}
+            </pre>
           </div>
         </div>
       </div>
