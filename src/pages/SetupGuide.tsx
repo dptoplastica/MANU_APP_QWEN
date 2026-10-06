@@ -15,6 +15,7 @@ export const SetupGuide: React.FC = () => {
   const [fixUsersNoRlsContent, setFixUsersNoRlsContent] = useState<string>('');
   const [fixGroupsSimpleContent, setFixGroupsSimpleContent] = useState<string>('');
   const [fixGroupsRlsContent, setFixGroupsRlsContent] = useState<string>('');
+  const [fixGroupsPermissionsContent, setFixGroupsPermissionsContent] = useState<string>('');
 
   useEffect(() => {
     // Cargar los archivos SQL
@@ -52,6 +53,11 @@ export const SetupGuide: React.FC = () => {
       .then(r => r.text())
       .then(setFixGroupsRlsContent)
       .catch(() => setFixGroupsRlsContent('-- No se pudo cargar fix-groups-rls.sql'));
+
+    fetch('/sql/fix-groups-permissions.sql')
+      .then(r => r.text())
+      .then(setFixGroupsPermissionsContent)
+      .catch(() => setFixGroupsPermissionsContent('-- No se pudo cargar fix-groups-permissions.sql'));
   }, []);
 
   const copyToClipboard = (text: string, stepId: string) => {
@@ -227,6 +233,19 @@ export const SetupGuide: React.FC = () => {
             </div>
             <Download className="w-4 h-4 text-purple-600" />
           </button>
+          <button
+            onClick={() => downloadFile(fixGroupsPermissionsContent, 'fix-groups-permissions.sql')}
+            className="flex items-center gap-3 p-4 bg-white border-2 border-red-400 rounded-lg hover:bg-red-50 transition-colors text-left sm:col-span-3"
+          >
+            <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <AlertCircle className="w-5 h-5 text-red-600" />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-gray-800 text-sm">fix-groups-permissions.sql</p>
+              <p className="text-xs text-gray-500">Diagnóstico completo y corrección de permisos (RECOMENDADO)</p>
+            </div>
+            <Download className="w-4 h-4 text-red-600" />
+          </button>
         </div>
       </div>
 
@@ -272,50 +291,59 @@ export const SetupGuide: React.FC = () => {
           <GraduationCap className="w-5 h-5" /> ¿Los cambios en grupos no se guardan?
         </h3>
         <p className="text-sm text-blue-700 mb-4">
-          Si cambias el nombre de los grupos pero los cambios se pierden al recargar la página, hay dos posibles causas:
+          Si recibes el error "Error al actualizar el grupo" al intentar editar un grupo, el problema es de permisos en Supabase.
         </p>
         <div className="space-y-3">
-          <div className="bg-white border border-blue-200 rounded-lg p-4">
-            <p className="text-sm font-medium text-gray-800 mb-2">🔍 Causa 1: IDs inválidos</p>
+          <div className="bg-white border border-red-200 rounded-lg p-4">
+            <p className="text-sm font-medium text-gray-800 mb-2">🔴 Solución RÁPIDA (RECOMENDADA):</p>
             <p className="text-sm text-gray-700 mb-2">
-              Los grupos tienen IDs locales (como "group-1a") en lugar de UUIDs válidos de Supabase.
+              Usa el script <code className="bg-red-100 px-2 py-0.5 rounded text-red-800">fix-groups-permissions.sql</code> (botón rojo de arriba)
             </p>
-            <p className="text-sm text-gray-700 mb-2">
-              <strong>Solución:</strong> Usa el script <code className="bg-blue-100 px-2 py-0.5 rounded text-blue-800">fix-groups-simple.sql</code> (botón azul de arriba)
-            </p>
-          </div>
-          <div className="bg-white border border-purple-200 rounded-lg p-4">
-            <p className="text-sm font-medium text-gray-800 mb-2">🔍 Causa 2: Políticas RLS bloqueando actualizaciones</p>
-            <p className="text-sm text-gray-700 mb-2">
-              Las políticas de seguridad (RLS) de Supabase están bloqueando las actualizaciones aunque los IDs sean válidos.
-            </p>
-            <p className="text-sm text-gray-700 mb-2">
-              <strong>Solución:</strong> Usa el script <code className="bg-purple-100 px-2 py-0.5 rounded text-purple-800">fix-groups-rls.sql</code> (botón púrpura de arriba)
-            </p>
+            <ol className="text-sm text-gray-700 space-y-1 list-decimal list-inside mt-2">
+              <li>Descarga el script <code className="bg-red-100 px-1 rounded text-xs">fix-groups-permissions.sql</code></li>
+              <li>Ve al SQL Editor de Supabase</li>
+              <li>Copia y pega TODO el contenido del script</li>
+              <li>Ejecuta el script completo</li>
+              <li>Recarga la aplicación (Ctrl+F5)</li>
+              <li>Intenta editar un grupo nuevamente</li>
+            </ol>
           </div>
           <div className="bg-white border border-gray-200 rounded-lg p-4">
-            <p className="text-sm font-medium text-gray-800 mb-2">🔍 Cómo diagnosticar:</p>
-            <ol className="text-sm text-gray-700 space-y-1 list-decimal list-inside">
-              <li>Abre la consola del navegador (F12)</li>
-              <li>Intenta editar un grupo</li>
-              <li>Observa los mensajes en la consola:</li>
-            </ol>
-            <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside mt-2 ml-4">
-              <li>Si ves: <code className="bg-gray-100 px-1 rounded text-xs">Cannot update group: Invalid UUID format</code> → Ejecuta <code className="bg-blue-100 px-1 rounded text-xs">fix-groups-simple.sql</code></li>
-              <li>Si ves: <code className="bg-gray-100 px-1 rounded text-xs">Update returned no data</code> → Ejecuta <code className="bg-purple-100 px-1 rounded text-xs">fix-groups-rls.sql</code></li>
-              <li>Si ves: <code className="bg-gray-100 px-1 rounded text-xs">Error updating group in Supabase</code> → Ejecuta <code className="bg-purple-100 px-1 rounded text-xs">fix-groups-rls.sql</code></li>
+            <p className="text-sm font-medium text-gray-800 mb-2">🔍 ¿Qué hace este script?</p>
+            <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
+              <li>Verifica la estructura de la tabla <code className="bg-gray-100 px-1 rounded text-xs">groups</code></li>
+              <li>Muestra las políticas RLS actuales</li>
+              <li>Verifica tu usuario y su rol</li>
+              <li>Elimina políticas restrictivas</li>
+              <li>Crea nuevas políticas permisivas para administradores</li>
+              <li>Te permite probar la actualización manualmente</li>
             </ul>
           </div>
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <p className="text-sm font-medium text-yellow-800 mb-2">💡 Recomendación:</p>
-            <p className="text-sm text-yellow-700">
-              Si no estás seguro de cuál es el problema, ejecuta ambos scripts en orden:
+            <p className="text-sm font-medium text-yellow-800 mb-2">⚠️ IMPORTANTE:</p>
+            <p className="text-sm text-yellow-700 mb-2">
+              Después de ejecutar el script, verifica que tu usuario tenga rol <code className="bg-yellow-100 px-1 rounded text-xs">admin</code>:
             </p>
-            <ol className="text-sm text-yellow-700 space-y-1 list-decimal list-inside mt-2">
-              <li>Primero: <code className="bg-yellow-100 px-1 rounded text-xs">fix-groups-simple.sql</code> (crea grupos con UUIDs válidos)</li>
-              <li>Segundo: <code className="bg-yellow-100 px-1 rounded text-xs">fix-groups-rls.sql</code> (corrige las políticas RLS)</li>
-              <li>Recarga la aplicación (Ctrl+F5)</li>
-            </ol>
+            <pre className="bg-gray-900 text-green-400 p-3 rounded text-xs overflow-x-auto">
+{`-- Verificar tu rol actual
+SELECT role FROM users WHERE id = auth.uid();
+
+-- Si NO eres admin, ejecuta esto:
+UPDATE users 
+SET role = 'admin', active = true
+WHERE id = auth.uid();`}
+            </pre>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
+            <p className="text-sm font-medium text-gray-800 mb-2">🔍 Otras posibles causas:</p>
+            <ul className="text-sm text-gray-700 space-y-2 list-disc list-inside">
+              <li>
+                <strong>IDs inválidos:</strong> Si ves <code className="bg-gray-100 px-1 rounded text-xs">Cannot update group: Invalid UUID format</code> en la consola, ejecuta primero <code className="bg-blue-100 px-1 rounded text-xs">fix-groups-simple.sql</code>
+              </li>
+              <li>
+                <strong>Políticas RLS:</strong> Si el script de permisos no funciona, ejecuta <code className="bg-purple-100 px-1 rounded text-xs">fix-groups-rls.sql</code>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
