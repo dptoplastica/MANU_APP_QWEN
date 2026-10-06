@@ -198,4 +198,4 @@ ORDER BY created_at DESC;
 -- ============================================================
 -- FIN DEL SCRIPT
 -- ============================================================
-RAISE NOTICE 'Script de corrección de permisos completado';
+-- Script de corrección de permisos completado
