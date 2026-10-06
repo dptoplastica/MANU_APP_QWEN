@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../contexts/AppContext';
-import { Database, CheckCircle, AlertCircle, ExternalLink, Copy, Check, Download, FileText, Eye, EyeOff } from 'lucide-react';
+import { Database, CheckCircle, AlertCircle, ExternalLink, Copy, Check, Download, FileText, Eye, EyeOff, GraduationCap } from 'lucide-react';
 
 export const SetupGuide: React.FC = () => {
   const { supabaseConnected } = useApp();
@@ -189,6 +189,23 @@ export const SetupGuide: React.FC = () => {
             </div>
             <Download className="w-4 h-4 text-green-600" />
           </button>
+          <button
+            onClick={() => {
+              fetch('/sql/fix-groups-uuid.sql')
+                .then(r => r.text())
+                .then(content => downloadFile(content, 'fix-groups-uuid.sql'));
+            }}
+            className="flex items-center gap-3 p-4 bg-white border-2 border-blue-400 rounded-lg hover:bg-blue-50 transition-colors text-left sm:col-span-3"
+          >
+            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <GraduationCap className="w-5 h-5 text-blue-600" />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-gray-800 text-sm">fix-groups-uuid.sql</p>
+              <p className="text-xs text-gray-500">Corregir grupos que no se guardan (IDs inválidos)</p>
+            </div>
+            <Download className="w-4 h-4 text-blue-600" />
+          </button>
         </div>
       </div>
 
@@ -224,6 +241,39 @@ export const SetupGuide: React.FC = () => {
               Si no puedes cambiar el rol o sigues teniendo problemas, la aplicación puede funcionar sin las políticas RLS perfectas. 
               El error 500 en la tabla users no impide el funcionamiento básico de la aplicación.
             </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Instrucciones para grupos que no se guardan */}
+      <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-6">
+        <h3 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+          <GraduationCap className="w-5 h-5" /> ¿Los cambios en grupos no se guardan?
+        </h3>
+        <p className="text-sm text-blue-700 mb-4">
+          Si cambias el nombre de los grupos pero los cambios se pierden al recargar la página, el problema es que los grupos tienen IDs locales en lugar de UUIDs válidos de Supabase.
+        </p>
+        <div className="space-y-3">
+          <div className="bg-white border border-blue-200 rounded-lg p-4">
+            <p className="text-sm font-medium text-gray-800 mb-2">✅ Solución:</p>
+            <p className="text-sm text-gray-700 mb-2">
+              Usa el script <code className="bg-blue-100 px-2 py-0.5 rounded text-blue-800">fix-groups-uuid.sql</code> (botón azul de arriba)
+            </p>
+            <ol className="text-sm text-gray-700 space-y-1 list-decimal list-inside mt-2">
+              <li>Descarga y ejecuta el script en el SQL Editor de Supabase</li>
+              <li>El script verificará si los grupos tienen UUIDs válidos</li>
+              <li>Si hay grupos con IDs inválidos, los eliminará y recreará con UUIDs válidos</li>
+              <li>Recarga la aplicación (Ctrl+F5) y los cambios ahora se guardarán correctamente</li>
+            </ol>
+          </div>
+          <div className="bg-white border border-blue-200 rounded-lg p-4">
+            <p className="text-sm font-medium text-gray-800 mb-2">🔍 Cómo diagnosticar:</p>
+            <ol className="text-sm text-gray-700 space-y-1 list-decimal list-inside">
+              <li>Abre la consola del navegador (F12)</li>
+              <li>Intenta editar un grupo</li>
+              <li>Si ves: <code className="bg-gray-100 px-1 rounded text-xs">Cannot update group: Invalid UUID format</code>, el problema es de IDs</li>
+              <li>Ejecuta el script <code className="bg-blue-100 px-1 rounded text-xs">fix-groups-uuid.sql</code></li>
+            </ol>
           </div>
         </div>
       </div>

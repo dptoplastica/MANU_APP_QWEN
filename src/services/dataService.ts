@@ -198,14 +198,31 @@ export const supabaseDataService = {
   },
 
   async getGroups(): Promise<Group[]> {
+    console.log('Supabase getGroups - Loading groups...');
     const { data, error } = await supabase.from('groups').select('*');
-    if (error || !data || data.length === 0) return seed.groups;
-    return data.map((g: any) => ({
+    
+    if (error) {
+      console.error('Supabase getGroups - Error:', error);
+      console.warn('Falling back to local seed data');
+      return seed.groups;
+    }
+    
+    if (!data || data.length === 0) {
+      console.warn('Supabase getGroups - No groups found in database');
+      console.warn('Falling back to local seed data');
+      return seed.groups;
+    }
+    
+    console.log('Supabase getGroups - Success:', data.length, 'groups loaded');
+    const groups = data.map((g: any) => ({
       id: g.id,
       name: g.name,
       course: g.course,
       academicYearId: g.academic_year_id
     }));
+    
+    console.log('Supabase getGroups - Mapped groups:', groups);
+    return groups;
   },
 
   async getStudents(): Promise<Student[]> {
@@ -345,6 +362,8 @@ export const supabaseDataService = {
   },
 
   async updateGroup(group: Group): Promise<boolean> {
+    console.log('Supabase updateGroup - Input:', group);
+    
     // Validar que el ID sea un UUID válido
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(group.id)) {
@@ -353,19 +372,23 @@ export const supabaseDataService = {
       return false;
     }
     
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('groups')
       .update({
         name: group.name,
         course: group.course,
         academic_year_id: group.academicYearId
       })
-      .eq('id', group.id);
+      .eq('id', group.id)
+      .select();
     
     if (error) {
       console.error('Error updating group:', error.message);
+      console.error('Error details:', error);
       return false;
     }
+    
+    console.log('Supabase updateGroup - Success:', data);
     return true;
   },
 

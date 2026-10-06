@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../contexts/AppContext';
 import * as seed from '../data/seed';
 import { User, Subject, Group, Student, TeacherSubjectGroup } from '../types';
@@ -28,6 +28,19 @@ export const Admin: React.FC = () => {
   const [groupsList, setGroupsList] = useState<Group[]>(contextGroups);
   const [studentsList, setStudentsList] = useState<Student[]>(contextStudents);
   const [assignmentsList, setAssignmentsList] = useState<TeacherSubjectGroup[]>(contextAssignments);
+
+  // Sincronizar estados locales con el contexto cuando cambien
+  useEffect(() => {
+    setGroupsList(contextGroups);
+  }, [contextGroups]);
+
+  useEffect(() => {
+    setStudentsList(contextStudents);
+  }, [contextStudents]);
+
+  useEffect(() => {
+    setAssignmentsList(contextAssignments);
+  }, [contextAssignments]);
   
   // Estados para modales
   const [showModal, setShowModal] = useState(false);
@@ -147,10 +160,14 @@ export const Admin: React.FC = () => {
           break;
         case 'groups':
           const updatedGroup = { ...editingItem, ...formData };
+          console.log('Updating group:', updatedGroup);
           const successUpdateGroup = await updateGroup(updatedGroup);
+          console.log('Update group result:', successUpdateGroup);
           if (successUpdateGroup) {
             setGroupsList(groupsList.map(g => g.id === editingItem.id ? updatedGroup : g));
             closeModal();
+          } else {
+            alert('Error al actualizar el grupo. Verifica la consola del navegador para más detalles.');
           }
           break;
         case 'students':
