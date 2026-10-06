@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solución: Error 400 en Autenticación - IES Lope de Vega</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
+        .error-box {
+            background: #fee;
+            border: 2px solid #fcc;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        .error-box h2 {
+            color: #c00;
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+        .error-code {
+            background: #1f2937;
+            color: #f87171;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+        .step {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 2px solid #e5e7eb;
+        }
+        .step:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+        }
+        .step-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 35px;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        .step h3 {
+            display: inline;
+            color: #1f2937;
+            font-size: 20px;
+        }
+        .step-content {
+            margin-top: 15px;
+            margin-left: 50px;
+        }
+        .step p {
+            color: #4b5563;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        .button {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            margin: 10px 10px 10px 0;
+            transition: all 0.3s;
+        }
+        .button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .button-secondary {
+            background: #10b981;
+        }
+        .button-secondary:hover {
+            background: #059669;
+        }
+        .credentials {
+            background: #dbeafe;
+            border: 2px solid #3b82f6;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .credentials h4 {
+            color: #1e40af;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        .credentials-item {
+            background: white;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border-left: 4px solid #3b82f6;
+        }
+        .credentials-item strong {
+            color: #1e40af;
+        }
+        .warning {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .warning strong {
+            color: #92400e;
+        }
+        .success {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .success strong {
+            color: #065f46;
+        }
+        .checklist {
+            background: #f0f9ff;
+            border: 2px solid #0ea5e9;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .checklist h4 {
+            color: #0369a1;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .checklist-item {
+            display: flex;
+            align-items: start;
+            margin: 10px 0;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+        }
+        .checklist-item input[type="checkbox"] {
+            margin-right: 10px;
+            margin-top: 3px;
+        }
+        ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+        li {
+            color: #4b5563;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Solución: Error 400 en Autenticación</h1>
+        <p class="subtitle">Guía paso a paso para resolver el error de autenticación en Supabase</p>
+
+        <div class="error-box">
+            <h2>❌ Error Identificado</h2>
+            <p>La consola muestra el siguiente error:</p>
+            <div class="error-code">
+                Failed to load resource: the server responded with a status of 400 ()<br>
+                /auth/v1/token?grant_type=password
+            </div>
+            <p style="margin-top: 15px;">
+                <strong>Causa:</strong> La autenticación por email/password no está configurada correctamente en Supabase, 
+                o los usuarios no existen en el sistema de autenticación.
+            </p>
+        </div>
+
+        <div class="step">
+            <span class="step-number">1</span>
+            <h3>Habilitar Autenticación por Email en Supabase</h3>
+            <div class="step-content">
+                <p>Primero debes habilitar la autenticación por email en Supabase:</p>
+                <ol style="margin-left: 20px; margin-top: 10px;">
+                    <li>Ve a <a href="https://supabase.com/dashboard/project/sbymwyxjuxhkilwcxoed/auth/providers" target="_blank" style="color: #667eea; font-weight: bold;">Supabase Dashboard → Authentication → Providers</a></li>
+                    <li>Busca <strong>Email</strong> en la lista de proveedores</li>
+                    <li>Asegúrate de que esté <strong>habilitado</strong> (toggle activado)</li>
+                    <li>Configura las opciones:
+                        <ul>
+                            <li>✅ <strong>Enable Email provider</strong>: Activado</li>
+                            <li>❌ <strong>Confirm email</strong>: Desactivado (para pruebas)</li>
+                        </ul>
+                    </li>
+                    <li>Haz clic en <strong>Save</strong></li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">2</span>
+            <h3>Crear Usuarios en Supabase Auth</h3>
+            <div class="step-content">
+                <p>Debes crear los usuarios en el sistema de autenticación de Supabase:</p>
+                
+                <div class="credentials">
+                    <h4>🔑 Usuario Administrador</h4>
+                    <div class="credentials-item">
+                        <strong>Email:</strong> admin@ieslopedevega.es
+                    </div>
+                    <div class="credentials-item">
+                        <strong>Password:</strong> Admin2026!
+                    </div>
+                </div>
+
+                <ol style="margin-left: 20px; margin-top: 10px;">
+                    <li>Ve a <a href="https://supabase.com/dashboard/project/sbymwyxjuxhkilwcxoed/auth/users" target="_blank" style="color: #667eea; font-weight: bold;">Supabase Dashboard → Authentication → Users</a></li>
+                    <li>Haz clic en <strong>"Add user"</strong> → <strong>"Create new user"</strong></li>
+                    <li>Completa los campos con las credenciales del administrador</li>
+                    <li>✅ Marca <strong>"Auto Confirm User"</strong></li>
+                    <li>Haz clic en <strong>"Create user"</strong></li>
+                </ol>
+
+                <div class="credentials" style="margin-top: 20px;">
+                    <h4>👨‍🏫 Usuario Profesor (Opcional)</h4>
+                    <div class="credentials-item">
+                        <strong>Email:</strong> profesor@ieslopedevega.es
+                    </div>
+                    <div class="credentials-item">
+                        <strong>Password:</strong> Prof2026!
+                    </div>
+                </div>
+
+                <p>Repite el proceso para crear el usuario profesor si lo necesitas.</p>
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">3</span>
+            <h3>Ejecutar Script SQL para Crear Perfiles</h3>
+            <div class="step-content">
+                <p>Después de crear los usuarios en Auth, necesitas crear sus perfiles en la tabla <code>users</code>:</p>
+                <ol style="margin-left: 20px; margin-top: 10px;">
+                    <li>
+                        <strong>Descarga el script:</strong>
+                        <a href="/sql/fix-auth.sql" download class="button" style="margin-left: 10px;">📥 Descargar fix-auth.sql</a>
+                    </li>
+                    <li>
+                        <strong>Abre el SQL Editor:</strong>
+                        <a href="https://supabase.com/dashboard/project/sbymwyxjuxhkilwcxoed/sql/new" target="_blank" class="button button-secondary" style="margin-left: 10px;">🔗 Ir al SQL Editor</a>
+                    </li>
+                    <li>Copia y pega TODO el contenido del script</li>
+                    <li>Haz clic en <strong>"Run"</strong> (o Ctrl+Enter)</li>
+                </ol>
+                <p style="margin-top: 15px;">Este script:</p>
+                <ul>
+                    <li>Verifica que los usuarios existan en <code>auth.users</code></li>
+                    <li>Crea los perfiles en la tabla <code>users</code></li>
+                    <li>Asigna los roles correctos (admin/teacher)</li>
+                    <li>Verifica que los emails estén confirmados</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">4</span>
+            <h3>Verificar la Configuración</h3>
+            <div class="step-content">
+                <p>Ejecuta esta consulta en el SQL Editor para verificar que todo esté correcto:</p>
+                <div class="error-code" style="color: #10b981;">
+SELECT <br>
+&nbsp;&nbsp;u.email,<br>
+&nbsp;&nbsp;u.name,<br>
+&nbsp;&nbsp;u.role,<br>
+&nbsp;&nbsp;u.active,<br>
+&nbsp;&nbsp;a.email_confirmed_at<br>
+FROM users u<br>
+LEFT JOIN auth.users a ON u.id = a.id;
+                </div>
+                <p>Deberías ver:</p>
+                <ul>
+                    <li>✅ Los usuarios con sus roles correctos</li>
+                    <li>✅ <code>email_confirmed_at</code> no es NULL</li>
+                    <li>✅ <code>active = true</code></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">5</span>
+            <h3>Probar la Autenticación</h3>
+            <div class="step-content">
+                <p>Ahora puedes intentar iniciar sesión en la aplicación:</p>
+                <ol style="margin-left: 20px; margin-top: 10px;">
+                    <li>Recarga la aplicación con <strong>Ctrl+F5</strong></li>
+                    <li>Ve a la página de login</li>
+                    <li>Ingresa las credenciales:
+                        <div class="credentials-item" style="margin-top: 10px;">
+                            <strong>Email:</strong> admin@ieslopedevega.es<br>
+                            <strong>Password:</strong> Admin2026!
+                        </div>
+                    </li>
+                    <li>Haz clic en <strong>"Acceder"</strong></li>
+                    <li>Deberías ver el Dashboard con acceso completo de administrador</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="checklist">
+            <h4>✅ Checklist de Verificación</h4>
+            <div class="checklist-item">
+                <input type="checkbox" id="check1">
+                <label for="check1">Email provider habilitado en Supabase</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="check2">
+                <label for="check2">Confirm email desactivado</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="check3">
+                <label for="check3">Usuarios creados en Authentication → Users</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="check4">
+                <label for="check4">Perfiles creados en tabla users</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="check5">
+                <label for="check5">Emails confirmados (email_confirmed_at no es NULL)</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="check6">
+                <label for="check6">Variables de entorno correctas en .env</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="check7">
+                <label for="check7">Aplicación recargada con Ctrl+F5</label>
+            </div>
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ Si el Error Persiste:</strong>
+            <ul style="margin-top: 10px;">
+                <li>Verifica la consola del navegador (F12) para ver errores específicos</li>
+                <li>Revisa la pestaña Network para ver la respuesta detallada del servidor</li>
+                <li>Asegúrate de que las credenciales sean correctas</li>
+                <li>Verifica que el usuario exista en <code>auth.users</code> y en la tabla <code>users</code></li>
+            </ul>
+        </div>
+
+        <div class="success">
+            <strong>✅ Otros Errores en la Consola:</strong>
+            <ul style="margin-top: 10px;">
+                <li><strong>WebSocket errors:</strong> Son normales en desarrollo, no afectan la funcionalidad</li>
+                <li><strong>React Router warnings:</strong> Son advertencias de futuras versiones, no afectan la funcionalidad</li>
+                <li><strong>SVG path errors:</strong> Son errores de renderizado de iconos, no críticos</li>
+            </ul>
+        </div>
+
+        <div style="margin-top: 40px; padding-top: 30px; border-top: 2px solid #e5e7eb; text-align: center; color: #6b7280;">
+            <p>¿Necesitas más ayuda? Consulta la documentación completa en <code>TROUBLESHOOTING_AUTH_AND_SVG.md</code></p>
+        </div>
+    </div>
+</body>
+</html>

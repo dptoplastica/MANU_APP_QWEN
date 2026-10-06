@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración de Autenticación - IES Lope de Vega</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
+        .alert {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+        .alert h2 {
+            color: #92400e;
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+        .alert p {
+            color: #78350f;
+            line-height: 1.6;
+        }
+        .step {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 2px solid #e5e7eb;
+        }
+        .step:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+        }
+        .step-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 35px;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        .step h3 {
+            display: inline;
+            color: #1f2937;
+            font-size: 20px;
+        }
+        .step-content {
+            margin-top: 15px;
+            margin-left: 50px;
+        }
+        .step p {
+            color: #4b5563;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        .code-block {
+            background: #1f2937;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .button {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            margin: 10px 10px 10px 0;
+            transition: all 0.3s;
+        }
+        .button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .button-secondary {
+            background: #10b981;
+        }
+        .button-secondary:hover {
+            background: #059669;
+        }
+        .credentials {
+            background: #dbeafe;
+            border: 2px solid #3b82f6;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .credentials h4 {
+            color: #1e40af;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        .credentials-item {
+            background: white;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border-left: 4px solid #3b82f6;
+        }
+        .credentials-item strong {
+            color: #1e40af;
+        }
+        .success {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            padding: 20px;
+            margin-top: 30px;
+            border-radius: 8px;
+        }
+        .success h2 {
+            color: #065f46;
+            margin-bottom: 10px;
+        }
+        .success p {
+            color: #047857;
+            line-height: 1.6;
+        }
+        .warning {
+            background: #fee2e2;
+            border-left: 4px solid #ef4444;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 8px;
+        }
+        .warning h3 {
+            color: #991b1b;
+            margin-bottom: 10px;
+        }
+        .warning p {
+            color: #7f1d1d;
+            line-height: 1.6;
+        }
+        .info-box {
+            background: #e0e7ff;
+            border: 2px solid #6366f1;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .info-box h4 {
+            color: #4338ca;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        .info-box p {
+            color: #3730a3;
+            line-height: 1.6;
+        }
+        ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+        li {
+            color: #4b5563;
+            line-height: 1.8;
+        }
+        .mode-indicator {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .mode-local {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .mode-supabase {
+            background: #d1fae5;
+            color: #065f46;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Configuración de Autenticación</h1>
+        <p class="subtitle">Guía completa para configurar y usar el sistema de autenticación</p>
+
+        <div class="alert">
+            <h2>⚠️ Problema Identificado</h2>
+            <p>La consola muestra el error <strong>400 (Bad Request)</strong> en <code>/auth/v1/token?grant_type=password</code>. Esto indica que la autenticación de Supabase no está configurada correctamente.</p>
+            <p style="margin-top: 10px;"><strong>Solución:</strong> La aplicación ahora funciona en <span class="mode-indicator mode-local">MODO LOCAL</span> como fallback, pero para persistencia completa necesitas configurar Supabase Auth.</p>
+        </div>
+
+        <div class="info-box">
+            <h4>📦 Modo Local vs Modo Supabase</h4>
+            <p><strong>Modo Local:</strong> La aplicación funciona con datos de demostración. Los cambios NO se persisten en Supabase. Útil para pruebas rápidas.</p>
+            <p style="margin-top: 10px;"><strong>Modo Supabase:</strong> La aplicación usa Supabase Auth y persiste todos los datos en la base de datos. Requiere configuración adicional.</p>
+        </div>
+
+        <div class="credentials">
+            <h4>🔑 Credenciales de Prueba (Modo Local)</h4>
+            <p style="margin-bottom: 15px;">Estas credenciales funcionan inmediatamente sin configuración adicional:</p>
+            <div class="credentials-item">
+                <strong>👨‍🏫 Profesor:</strong><br>
+                Email: <code>profesor@ieslopedevega.es</code><br>
+                Contraseña: <code>Prof2026!</code> (o cualquier valor)
+            </div>
+            <div class="credentials-item">
+                <strong>🔑 Administrador:</strong><br>
+                Email: <code>admin@ieslopedevega.es</code><br>
+                Contraseña: <code>Admin2026!</code> (o cualquier valor)
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">1</span>
+            <h3>Probar Modo Local (Inmediato)</h3>
+            <div class="step-content">
+                <p>Puedes iniciar sesión inmediatamente con las credenciales de prueba:</p>
+                <ol style="margin-left: 20px; margin-top: 10px;">
+                    <li>Ve a la página de login de la aplicación</li>
+                    <li>Usa las credenciales de arriba</li>
+                    <li>Haz clic en "Acceder"</li>
+                    <li>Verás un mensaje en la consola indicando el modo de autenticación</li>
+                </ol>
+                <div class="code-block">
+📦 ⚠️ Sesión iniciada en MODO LOCAL<br>
+📦 Los datos NO se persisten en Supabase
+                </div>
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">2</span>
+            <h3>Configurar Supabase Auth (Para Persistencia)</h3>
+            <div class="step-content">
+                <p>Para que los datos se persistan en Supabase, necesitas:</p>
+                <ol style="margin-left: 20px; margin-top: 10px;">
+                    <li>
+                        <strong>Habilitar Email Provider:</strong>
+                        <div style="margin-left: 20px; margin-top: 10px;">
+                            <a href="https://supabase.com/dashboard/project/sbymwyxjuxhkilwcxoed/auth/providers" target="_blank" class="button">Ir a Authentication → Providers</a>
+                            <ul>
+                                <li>Busca <strong>Email</strong> en la lista</li>
+                                <li>✅ Activa <strong>Enable Email provider</strong></li>
+                                <li>❌ Desactiva <strong>Confirm email</strong> (para pruebas)</li>
+                                <li>Haz clic en <strong>Save</strong></li>
+                            </ul>
+                        </div>
+                    </li>
+                    <li style="margin-top: 20px;">
+                        <strong>Crear Usuarios en Supabase Auth:</strong>
+                        <div style="margin-left: 20px; margin-top: 10px;">
+                            <a href="https://supabase.com/dashboard/project/sbymwyxjuxhkilwcxoed/auth/users" target="_blank" class="button button-secondary">Ir a Authentication → Users</a>
+                            <ul>
+                                <li>Haz clic en <strong>"Add user"</strong> → <strong>"Create new user"</strong></li>
+                                <li>Crea el usuario administrador:
+                                    <div class="code-block" style="margin-top: 5px;">
+Email: admin@ieslopedevega.es<br>
+Password: Admin2026!<br>
+✓ Auto Confirm User
+                                    </div>
+                                </li>
+                                <li>Crea el usuario profesor:
+                                    <div class="code-block" style="margin-top: 5px;">
+Email: profesor@ieslopedevega.es<br>
+Password: Prof2026!<br>
+✓ Auto Confirm User
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">3</span>
+            <h3>Ejecutar Script SQL para Crear Perfiles</h3>
+            <div class="step-content">
+                <p>Después de crear los usuarios en Supabase Auth, necesitas crear sus perfiles en la tabla <code>users</code>:</p>
+                <ol style="margin-left: 20px; margin-top: 10px;">
+                    <li>
+                        <strong>Descarga el script:</strong>
+                        <a href="/sql/fix-auth.sql" download class="button" style="margin-left: 10px;">📥 Descargar fix-auth.sql</a>
+                    </li>
+                    <li style="margin-top: 15px;">
+                        <strong>Ejecuta en Supabase:</strong>
+                        <a href="https://supabase.com/dashboard/project/sbymwyxjuxhkilwcxoed/sql/new" target="_blank" class="button button-secondary" style="margin-left: 10px;">🔗 Ir al SQL Editor</a>
+                    </li>
+                    <li style="margin-top: 15px;">
+                        <p>Copia y pega el contenido del script y haz clic en <strong>"Run"</strong></p>
+                    </li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">4</span>
+            <h3>Verificar la Configuración</h3>
+            <div class="step-content">
+                <p>Ejecuta esta consulta en el SQL Editor para verificar:</p>
+                <div class="code-block">
+SELECT <br>
+&nbsp;&nbsp;u.email,<br>
+&nbsp;&nbsp;u.name,<br>
+&nbsp;&nbsp;u.role,<br>
+&nbsp;&nbsp;u.active,<br>
+&nbsp;&nbsp;a.email_confirmed_at<br>
+FROM users u<br>
+LEFT JOIN auth.users a ON u.id = a.id;
+                </div>
+                <p>Deberías ver:</p>
+                <ul>
+                    <li>✅ Los usuarios con sus roles correctos</li>
+                    <li>✅ <code>email_confirmed_at</code> no es NULL</li>
+                    <li>✅ <code>active = true</code></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">5</span>
+            <h3>Probar la Autenticación con Supabase</h3>
+            <div class="step-content">
+                <p>Después de configurar Supabase Auth:</p>
+                <ol style="margin-left: 20px; margin-top: 10px;">
+                    <li>Recarga la aplicación con <strong>Ctrl+F5</strong></li>
+                    <li>Inicia sesión con las mismas credenciales</li>
+                    <li>Verás un mensaje diferente en la consola:
+                        <div class="code-block" style="margin-top: 10px;">
+🌐 ✅ Sesión iniciada con Supabase<br>
+🌐 Los datos se persisten en Supabase
+                        </div>
+                    </li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="success">
+            <h2>✅ Resultado Esperado</h2>
+            <p><strong>Modo Local:</strong> La aplicación funciona inmediatamente con datos de demostración. Los cambios se pierden al recargar.</p>
+            <p style="margin-top: 10px;"><strong>Modo Supabase:</strong> La aplicación persiste todos los datos en Supabase. Los cambios se mantienen entre sesiones.</p>
+        </div>
+
+        <div class="warning">
+            <h3>🔍 Diagnóstico de Problemas</h3>
+            <p><strong>Si ves el error 400:</strong> Supabase Auth no está configurado. Usa el modo local o configura Supabase Auth siguiendo los pasos anteriores.</p>
+            <p style="margin-top: 10px;"><strong>Si el login falla:</strong> Verifica que las credenciales sean correctas y que el usuario exista en Supabase Auth (si usas modo Supabase).</p>
+            <p style="margin-top: 10px;"><strong>Si los datos no se persisten:</strong> Verifica que estás en modo Supabase (revisa la consola del navegador).</p>
+        </div>
+
+        <div style="margin-top: 40px; padding-top: 30px; border-top: 2px solid #e5e7eb; text-align: center; color: #6b7280;">
+            <p>¿Necesitas más ayuda? Consulta la documentación completa en <code>SOLUCION_ERRORES_CONSOLA.md</code></p>
+        </div>
+    </div>
+</body>
+</html>
