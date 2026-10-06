@@ -3,6 +3,14 @@
 ## Problema
 Cuando cambias el nombre de los grupos como administrador, los cambios no se persisten y se pierden al recargar la página.
 
+### Error al ejecutar el script SQL
+Si al ejecutar `fix-groups-uuid.sql` ves el error:
+```
+ERROR: 42883: function length(uuid) does not exist
+```
+
+Esto significa que necesitas convertir el UUID a texto antes de usar `LENGTH()`. El script ya está corregido para usar `id::text` en lugar de `id` directamente.
+
 ## Causa
 El problema ocurre cuando los grupos tienen IDs locales (como "group-1a") en lugar de UUIDs válidos de Supabase. La aplicación valida que los IDs sean UUIDs antes de intentar actualizar en Supabase, y si no lo son, los cambios se guardan solo en el estado local de React, perdiéndose al recargar.
 

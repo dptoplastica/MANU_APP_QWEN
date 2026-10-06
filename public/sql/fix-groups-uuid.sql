@@ -10,9 +10,9 @@ SELECT
   name,
   course,
   academic_year_id,
-  LENGTH(id) as id_length,
+  LENGTH(id::text) as id_length,
   CASE 
-    WHEN id ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN 'UUID válido'
+    WHEN id::text ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN 'UUID válido'
     ELSE 'ID inválido (no es UUID)'
   END as id_status
 FROM groups
@@ -21,8 +21,8 @@ ORDER BY created_at;
 -- Paso 2: Contar grupos con IDs inválidos
 SELECT 
   COUNT(*) as total_groups,
-  SUM(CASE WHEN id ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN 1 ELSE 0 END) as uuid_validos,
-  SUM(CASE WHEN id !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN 1 ELSE 0 END) as uuid_invalidos
+  SUM(CASE WHEN id::text ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN 1 ELSE 0 END) as uuid_validos,
+  SUM(CASE WHEN id::text !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN 1 ELSE 0 END) as uuid_invalidos
 FROM groups;
 
 -- ============================================================
@@ -31,7 +31,7 @@ FROM groups;
 
 -- Eliminar grupos con IDs inválidos
 DELETE FROM groups
-WHERE id !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$';
+WHERE id::text !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$';
 
 -- Crear grupos con UUIDs válidos (si no existen)
 INSERT INTO groups (id, name, course, academic_year_id)
