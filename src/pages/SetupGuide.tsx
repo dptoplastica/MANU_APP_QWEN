@@ -13,6 +13,7 @@ export const SetupGuide: React.FC = () => {
   const [setupCompletoContent, setSetupCompletoContent] = useState<string>('');
   const [fixUsersContent, setFixUsersContent] = useState<string>('');
   const [fixUsersNoRlsContent, setFixUsersNoRlsContent] = useState<string>('');
+  const [fixGroupsSimpleContent, setFixGroupsSimpleContent] = useState<string>('');
 
   useEffect(() => {
     // Cargar los archivos SQL
@@ -40,6 +41,11 @@ export const SetupGuide: React.FC = () => {
       .then(r => r.text())
       .then(setFixUsersNoRlsContent)
       .catch(() => setFixUsersNoRlsContent('-- No se pudo cargar fix-users-no-rls.sql'));
+
+    fetch('/sql/fix-groups-simple.sql')
+      .then(r => r.text())
+      .then(setFixGroupsSimpleContent)
+      .catch(() => setFixGroupsSimpleContent('-- No se pudo cargar fix-groups-simple.sql'));
   }, []);
 
   const copyToClipboard = (text: string, stepId: string) => {
@@ -190,18 +196,14 @@ export const SetupGuide: React.FC = () => {
             <Download className="w-4 h-4 text-green-600" />
           </button>
           <button
-            onClick={() => {
-              fetch('/sql/fix-groups-uuid.sql')
-                .then(r => r.text())
-                .then(content => downloadFile(content, 'fix-groups-uuid.sql'));
-            }}
+            onClick={() => downloadFile(fixGroupsSimpleContent, 'fix-groups-simple.sql')}
             className="flex items-center gap-3 p-4 bg-white border-2 border-blue-400 rounded-lg hover:bg-blue-50 transition-colors text-left sm:col-span-3"
           >
             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
               <GraduationCap className="w-5 h-5 text-blue-600" />
             </div>
             <div className="flex-1">
-              <p className="font-medium text-gray-800 text-sm">fix-groups-uuid.sql</p>
+              <p className="font-medium text-gray-800 text-sm">fix-groups-simple.sql</p>
               <p className="text-xs text-gray-500">Corregir grupos que no se guardan (IDs inválidos)</p>
             </div>
             <Download className="w-4 h-4 text-blue-600" />
@@ -257,12 +259,11 @@ export const SetupGuide: React.FC = () => {
           <div className="bg-white border border-blue-200 rounded-lg p-4">
             <p className="text-sm font-medium text-gray-800 mb-2">✅ Solución:</p>
             <p className="text-sm text-gray-700 mb-2">
-              Usa el script <code className="bg-blue-100 px-2 py-0.5 rounded text-blue-800">fix-groups-uuid.sql</code> (botón azul de arriba)
+              Usa el script <code className="bg-blue-100 px-2 py-0.5 rounded text-blue-800">fix-groups-simple.sql</code> (botón azul de arriba)
             </p>
             <ol className="text-sm text-gray-700 space-y-1 list-decimal list-inside mt-2">
               <li>Descarga y ejecuta el script en el SQL Editor de Supabase</li>
-              <li>El script verificará si los grupos tienen UUIDs válidos</li>
-              <li>Si hay grupos con IDs inválidos, los eliminará y recreará con UUIDs válidos</li>
+              <li>El script eliminará todos los grupos y los recreará con UUIDs válidos</li>
               <li>Recarga la aplicación (Ctrl+F5) y los cambios ahora se guardarán correctamente</li>
             </ol>
           </div>
@@ -272,7 +273,7 @@ export const SetupGuide: React.FC = () => {
               <li>Abre la consola del navegador (F12)</li>
               <li>Intenta editar un grupo</li>
               <li>Si ves: <code className="bg-gray-100 px-1 rounded text-xs">Cannot update group: Invalid UUID format</code>, el problema es de IDs</li>
-              <li>Ejecuta el script <code className="bg-blue-100 px-1 rounded text-xs">fix-groups-uuid.sql</code></li>
+              <li>Ejecuta el script <code className="bg-blue-100 px-1 rounded text-xs">fix-groups-simple.sql</code></li>
             </ol>
           </div>
         </div>
