@@ -18,6 +18,8 @@ export const SetupGuide: React.FC = () => {
   const [fixAuthContent, setFixAuthContent] = useState<string>('');
   const [fixGroupsSimpleContent, setFixGroupsSimpleContent] = useState<string>('');
   const [fixAuthCompleteContent, setFixAuthCompleteContent] = useState<string>('');
+  const [grantPermissionsContent, setGrantPermissionsContent] = useState<string>('');
+  const [fixAuthSimpleContent, setFixAuthSimpleContent] = useState<string>('');
   const [fixGroupsRlsContent, setFixGroupsRlsContent] = useState<string>('');
   const [fixGroupsPermissionsContent, setFixGroupsPermissionsContent] = useState<string>('');
   const [fixGroupsFinalContent, setFixGroupsFinalContent] = useState<string>('');
@@ -70,6 +72,16 @@ export const SetupGuide: React.FC = () => {
       .then(r => r.text())
       .then(setFixAuthCompleteContent)
       .catch(() => setFixAuthCompleteContent('-- No se pudo cargar fix-auth-complete.sql'));
+
+    fetch('/sql/grant-permissions.sql')
+      .then(r => r.text())
+      .then(setGrantPermissionsContent)
+      .catch(() => setGrantPermissionsContent('-- No se pudo cargar grant-permissions.sql'));
+
+    fetch('/sql/fix-auth-simple.sql')
+      .then(r => r.text())
+      .then(setFixAuthSimpleContent)
+      .catch(() => setFixAuthSimpleContent('-- No se pudo cargar fix-auth-simple.sql'));
 
     fetch('/sql/fix-groups-simple.sql')
       .then(r => r.text())
@@ -300,6 +312,32 @@ export const SetupGuide: React.FC = () => {
               <p className="text-xs text-gray-500">Configuración completa de autenticación (RECOMENDADO)</p>
             </div>
             <Download className="w-4 h-4 text-green-600" />
+          </button>
+          <button
+            onClick={() => downloadFile(grantPermissionsContent, 'grant-permissions.sql')}
+            className="flex items-center gap-3 p-4 bg-white border-2 border-red-500 rounded-lg hover:bg-red-50 transition-colors text-left sm:col-span-3"
+          >
+            <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <AlertCircle className="w-5 h-5 text-red-600" />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-gray-800 text-sm">grant-permissions.sql</p>
+              <p className="text-xs text-gray-500">Otorgar permisos para acceder a auth.users (EJECUTAR PRIMERO si hay error de permisos)</p>
+            </div>
+            <Download className="w-4 h-4 text-red-600" />
+          </button>
+          <button
+            onClick={() => downloadFile(fixAuthSimpleContent, 'fix-auth-simple.sql')}
+            className="flex items-center gap-3 p-4 bg-white border-2 border-teal-500 rounded-lg hover:bg-teal-50 transition-colors text-left sm:col-span-3"
+          >
+            <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <CheckCircle className="w-5 h-5 text-teal-600" />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-gray-800 text-sm">fix-auth-simple.sql</p>
+              <p className="text-xs text-gray-500">Crear usuarios SIN acceso a auth.users (ALTERNATIVA si grant-permissions.sql falla)</p>
+            </div>
+            <Download className="w-4 h-4 text-teal-600" />
           </button>
           <button
             onClick={() => downloadFile(fixGroupsSimpleContent, 'fix-groups-simple.sql')}
@@ -593,6 +631,64 @@ export const SetupGuide: React.FC = () => {
               Ver guía paso a paso con imágenes
             </a>
           </p>
+        </div>
+      </div>
+
+      {/* Instrucciones para error de permisos */}
+      <div className="bg-red-50 border-4 border-red-500 rounded-xl p-6 shadow-lg">
+        <h3 className="font-bold text-red-900 mb-3 flex items-center gap-2 text-xl">
+          <AlertCircle className="w-6 h-6" /> 🔴 ERROR DE PERMISOS AL EJECUTAR SCRIPTS SQL
+        </h3>
+        <p className="text-base text-red-800 mb-4 font-medium">
+          Si ves el error <code className="bg-red-100 px-2 py-0.5 rounded text-red-900">permission denied for table users</code> al ejecutar scripts SQL, sigue estos pasos:
+        </p>
+        <div className="bg-white rounded-lg p-5 mb-4 border-2 border-red-300">
+          <h4 className="font-bold text-gray-900 mb-3 text-lg">📋 Solución en 2 Pasos:</h4>
+          <ol className="space-y-4 text-sm">
+            <li className="flex items-start gap-3">
+              <span className="bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 font-bold">1</span>
+              <div className="flex-1">
+                <p className="font-bold text-gray-900 mb-2">Ejecutar grant-permissions.sql</p>
+                <p className="text-gray-700 mb-2">Este script otorga los permisos necesarios para acceder a <code className="bg-gray-100 px-1 rounded">auth.users</code>:</p>
+                <button
+                  onClick={() => downloadFile(grantPermissionsContent, 'grant-permissions.sql')}
+                  className="text-red-600 underline font-bold hover:text-red-800"
+                >
+                  📥 grant-permissions.sql
+                </button>
+                <p className="text-xs text-gray-600 mt-2">
+                  ⚠️ <strong>Importante:</strong> Si este script también falla con "permission denied", significa que no tienes permisos de administrador en Supabase. 
+                  En ese caso, usa la alternativa del paso 2.
+                </p>
+              </div>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="bg-teal-500 text-white rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 font-bold">2</span>
+              <div className="flex-1">
+                <p className="font-bold text-gray-900 mb-2">Ejecutar fix-auth-simple.sql (ALTERNATIVA)</p>
+                <p className="text-gray-700 mb-2">Si <code className="bg-gray-100 px-1 rounded">grant-permissions.sql</code> falla, usa este script que NO requiere acceso a <code className="bg-gray-100 px-1 rounded">auth.users</code>:</p>
+                <button
+                  onClick={() => downloadFile(fixAuthSimpleContent, 'fix-auth-simple.sql')}
+                  className="text-teal-600 underline font-bold hover:text-teal-800"
+                >
+                  📥 fix-auth-simple.sql
+                </button>
+                <p className="text-xs text-gray-600 mt-2">
+                  ✅ Este script crea los usuarios directamente en la tabla <code className="bg-gray-100 px-1 rounded">users</code> sin verificar <code className="bg-gray-100 px-1 rounded">auth.users</code>.
+                </p>
+              </div>
+            </li>
+          </ol>
+        </div>
+        <div className="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-4">
+          <p className="text-sm text-yellow-900 font-medium">
+            💡 <strong>Después de ejecutar cualquiera de los scripts:</strong>
+          </p>
+          <ol className="text-sm text-yellow-800 mt-2 space-y-1 list-decimal list-inside">
+            <li>Crea los usuarios en Supabase Auth (Authentication → Users)</li>
+            <li>Recarga la aplicación con Ctrl+F5</li>
+            <li>Inicia sesión con las credenciales</li>
+          </ol>
         </div>
       </div>
 
