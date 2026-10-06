@@ -14,6 +14,7 @@ export const SetupGuide: React.FC = () => {
   const [fixUsersContent, setFixUsersContent] = useState<string>('');
   const [fixUsersNoRlsContent, setFixUsersNoRlsContent] = useState<string>('');
   const [fixUsersFinalContent, setFixUsersFinalContent] = useState<string>('');
+  const [createAdminUserContent, setCreateAdminUserContent] = useState<string>('');
   const [fixGroupsSimpleContent, setFixGroupsSimpleContent] = useState<string>('');
   const [fixGroupsRlsContent, setFixGroupsRlsContent] = useState<string>('');
   const [fixGroupsPermissionsContent, setFixGroupsPermissionsContent] = useState<string>('');
@@ -52,6 +53,11 @@ export const SetupGuide: React.FC = () => {
       .then(r => r.text())
       .then(setFixUsersFinalContent)
       .catch(() => setFixUsersFinalContent('-- No se pudo cargar fix-users-final.sql'));
+
+    fetch('/sql/create-admin-user.sql')
+      .then(r => r.text())
+      .then(setCreateAdminUserContent)
+      .catch(() => setCreateAdminUserContent('-- No se pudo cargar create-admin-user.sql'));
 
     fetch('/sql/fix-groups-simple.sql')
       .then(r => r.text())
@@ -245,6 +251,19 @@ export const SetupGuide: React.FC = () => {
             <Download className="w-4 h-4 text-red-600" />
           </button>
           <button
+            onClick={() => downloadFile(createAdminUserContent, 'create-admin-user.sql')}
+            className="flex items-center gap-3 p-4 bg-white border-2 border-purple-500 rounded-lg hover:bg-purple-50 transition-colors text-left sm:col-span-3"
+          >
+            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Database className="w-5 h-5 text-purple-600" />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-gray-800 text-sm">create-admin-user.sql</p>
+              <p className="text-xs text-gray-500">Crear usuario administrador (ejecutar DESPUÉS de crear usuario en Auth)</p>
+            </div>
+            <Download className="w-4 h-4 text-purple-600" />
+          </button>
+          <button
             onClick={() => downloadFile(fixGroupsSimpleContent, 'fix-groups-simple.sql')}
             className="flex items-center gap-3 p-4 bg-white border-2 border-blue-400 rounded-lg hover:bg-blue-50 transition-colors text-left sm:col-span-3"
           >
@@ -358,6 +377,79 @@ export const SetupGuide: React.FC = () => {
               El error 500 en la tabla users no impide el funcionamiento básico de la aplicación.
             </p>
           </div>
+        </div>
+      </div>
+
+      {/* Instrucciones para crear usuario administrador */}
+      <div className="bg-purple-50 border-4 border-purple-500 rounded-xl p-6 shadow-lg">
+        <h3 className="font-bold text-purple-900 mb-3 flex items-center gap-2 text-xl">
+          <Database className="w-6 h-6" /> 🔐 CÓMO ENTRAR COMO ADMINISTRADOR
+        </h3>
+        <p className="text-base text-purple-800 mb-4 font-medium">
+          Para entrar como administrador necesitas crear un usuario en Supabase Auth y luego crear su perfil en la tabla users:
+        </p>
+        <div className="bg-white rounded-lg p-5 mb-4 border-2 border-purple-300">
+          <h4 className="font-bold text-gray-900 mb-3 text-lg">📋 Pasos a Seguir:</h4>
+          <ol className="space-y-3 text-sm">
+            <li className="flex items-start gap-2">
+              <span className="bg-purple-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 font-bold">1</span>
+              <span>
+                <strong>Crear usuario en Supabase Auth:</strong>{' '}
+                <a
+                  href="https://supabase.com/dashboard/project/sbymwyxjuxhkilwcxoed/auth/users"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 underline font-bold hover:text-blue-800"
+                >
+                  Ir a Authentication → Users
+                </a>
+                <div className="mt-2 ml-8 text-xs text-gray-600">
+                  <div className="bg-blue-50 border border-blue-200 rounded p-2 mt-1">
+                    <strong>Email:</strong> admin@ieslopedevega.es<br/>
+                    <strong>Password:</strong> Admin2026!<br/>
+                    <strong>✓ Auto Confirm User</strong>
+                  </div>
+                </div>
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="bg-purple-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 font-bold">2</span>
+              <span>
+                <strong>Descargar y ejecutar script:</strong>{' '}
+                <button
+                  onClick={() => downloadFile(createAdminUserContent, 'create-admin-user.sql')}
+                  className="text-purple-600 underline font-bold hover:text-purple-800"
+                >
+                  create-admin-user.sql
+                </button>
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="bg-purple-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 font-bold">3</span>
+              <span>
+                <strong>Iniciar sesión en la aplicación:</strong>
+                <div className="mt-2 ml-8 text-xs text-gray-600">
+                  <div className="bg-green-50 border border-green-200 rounded p-2 mt-1">
+                    <strong>Email:</strong> admin@ieslopedevega.es<br/>
+                    <strong>Password:</strong> Admin2026!
+                  </div>
+                </div>
+              </span>
+            </li>
+          </ol>
+        </div>
+        <div className="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-4">
+          <p className="text-sm text-yellow-900 font-medium">
+            💡 <strong>Guía visual completa:</strong>{' '}
+            <a
+              href="/COMO_ENTRAR_COMO_ADMINISTRADOR.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 underline font-bold hover:text-blue-800"
+            >
+              Ver guía paso a paso con imágenes
+            </a>
+          </p>
         </div>
       </div>
 
