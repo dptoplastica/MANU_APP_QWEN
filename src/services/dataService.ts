@@ -362,33 +362,48 @@ export const supabaseDataService = {
   },
 
   async updateGroup(group: Group): Promise<boolean> {
-    console.log('Supabase updateGroup - Input:', group);
+    console.log('🔄 Supabase updateGroup - Starting update for group:', group);
     
     // Validar que el ID sea un UUID válido
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(group.id)) {
-      console.warn('Cannot update group: Invalid UUID format', group.id);
+      console.warn('❌ Cannot update group: Invalid UUID format', group.id);
       console.warn('This group exists only in local seed data and cannot be updated in Supabase');
       return false;
     }
+    
+    console.log('✅ UUID is valid, proceeding with update...');
     
     const { data, error } = await supabase
       .from('groups')
       .update({
         name: group.name,
         course: group.course,
-        academic_year_id: group.academicYearId
+        academic_year_id: group.academicYearId,
+        updated_at: new Date().toISOString()
       })
       .eq('id', group.id)
       .select();
     
     if (error) {
-      console.error('Error updating group:', error.message);
-      console.error('Error details:', error);
+      console.error('❌ Error updating group in Supabase:', error);
+      console.error('Error message:', error.message);
+      console.error('Error details:', error.details);
+      console.error('Error hint:', error.hint);
+      console.error('Error code:', error.code);
       return false;
     }
     
-    console.log('Supabase updateGroup - Success:', data);
+    if (!data || data.length === 0) {
+      console.warn('⚠️ Update returned no data. This might indicate:');
+      console.warn('  - The group ID does not exist in Supabase');
+      console.warn('  - RLS policies are blocking the update');
+      console.warn('  - The user does not have permission to update');
+      return false;
+    }
+    
+    console.log('✅ Supabase updateGroup - Success:', data);
+    console.log('✅ Group updated successfully:', data[0]);
     return true;
   },
 

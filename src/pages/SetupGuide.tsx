@@ -14,6 +14,7 @@ export const SetupGuide: React.FC = () => {
   const [fixUsersContent, setFixUsersContent] = useState<string>('');
   const [fixUsersNoRlsContent, setFixUsersNoRlsContent] = useState<string>('');
   const [fixGroupsSimpleContent, setFixGroupsSimpleContent] = useState<string>('');
+  const [fixGroupsRlsContent, setFixGroupsRlsContent] = useState<string>('');
 
   useEffect(() => {
     // Cargar los archivos SQL
@@ -46,6 +47,11 @@ export const SetupGuide: React.FC = () => {
       .then(r => r.text())
       .then(setFixGroupsSimpleContent)
       .catch(() => setFixGroupsSimpleContent('-- No se pudo cargar fix-groups-simple.sql'));
+
+    fetch('/sql/fix-groups-rls.sql')
+      .then(r => r.text())
+      .then(setFixGroupsRlsContent)
+      .catch(() => setFixGroupsRlsContent('-- No se pudo cargar fix-groups-rls.sql'));
   }, []);
 
   const copyToClipboard = (text: string, stepId: string) => {
@@ -208,6 +214,19 @@ export const SetupGuide: React.FC = () => {
             </div>
             <Download className="w-4 h-4 text-blue-600" />
           </button>
+          <button
+            onClick={() => downloadFile(fixGroupsRlsContent, 'fix-groups-rls.sql')}
+            className="flex items-center gap-3 p-4 bg-white border-2 border-purple-400 rounded-lg hover:bg-purple-50 transition-colors text-left sm:col-span-3"
+          >
+            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Database className="w-5 h-5 text-purple-600" />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-gray-800 text-sm">fix-groups-rls.sql</p>
+              <p className="text-xs text-gray-500">Corregir políticas RLS de grupos (si los cambios no persisten)</p>
+            </div>
+            <Download className="w-4 h-4 text-purple-600" />
+          </button>
         </div>
       </div>
 
@@ -253,27 +272,49 @@ export const SetupGuide: React.FC = () => {
           <GraduationCap className="w-5 h-5" /> ¿Los cambios en grupos no se guardan?
         </h3>
         <p className="text-sm text-blue-700 mb-4">
-          Si cambias el nombre de los grupos pero los cambios se pierden al recargar la página, el problema es que los grupos tienen IDs locales en lugar de UUIDs válidos de Supabase.
+          Si cambias el nombre de los grupos pero los cambios se pierden al recargar la página, hay dos posibles causas:
         </p>
         <div className="space-y-3">
           <div className="bg-white border border-blue-200 rounded-lg p-4">
-            <p className="text-sm font-medium text-gray-800 mb-2">✅ Solución:</p>
+            <p className="text-sm font-medium text-gray-800 mb-2">🔍 Causa 1: IDs inválidos</p>
             <p className="text-sm text-gray-700 mb-2">
-              Usa el script <code className="bg-blue-100 px-2 py-0.5 rounded text-blue-800">fix-groups-simple.sql</code> (botón azul de arriba)
+              Los grupos tienen IDs locales (como "group-1a") en lugar de UUIDs válidos de Supabase.
             </p>
-            <ol className="text-sm text-gray-700 space-y-1 list-decimal list-inside mt-2">
-              <li>Descarga y ejecuta el script en el SQL Editor de Supabase</li>
-              <li>El script eliminará todos los grupos y los recreará con UUIDs válidos</li>
-              <li>Recarga la aplicación (Ctrl+F5) y los cambios ahora se guardarán correctamente</li>
-            </ol>
+            <p className="text-sm text-gray-700 mb-2">
+              <strong>Solución:</strong> Usa el script <code className="bg-blue-100 px-2 py-0.5 rounded text-blue-800">fix-groups-simple.sql</code> (botón azul de arriba)
+            </p>
           </div>
-          <div className="bg-white border border-blue-200 rounded-lg p-4">
+          <div className="bg-white border border-purple-200 rounded-lg p-4">
+            <p className="text-sm font-medium text-gray-800 mb-2">🔍 Causa 2: Políticas RLS bloqueando actualizaciones</p>
+            <p className="text-sm text-gray-700 mb-2">
+              Las políticas de seguridad (RLS) de Supabase están bloqueando las actualizaciones aunque los IDs sean válidos.
+            </p>
+            <p className="text-sm text-gray-700 mb-2">
+              <strong>Solución:</strong> Usa el script <code className="bg-purple-100 px-2 py-0.5 rounded text-purple-800">fix-groups-rls.sql</code> (botón púrpura de arriba)
+            </p>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
             <p className="text-sm font-medium text-gray-800 mb-2">🔍 Cómo diagnosticar:</p>
             <ol className="text-sm text-gray-700 space-y-1 list-decimal list-inside">
               <li>Abre la consola del navegador (F12)</li>
               <li>Intenta editar un grupo</li>
-              <li>Si ves: <code className="bg-gray-100 px-1 rounded text-xs">Cannot update group: Invalid UUID format</code>, el problema es de IDs</li>
-              <li>Ejecuta el script <code className="bg-blue-100 px-1 rounded text-xs">fix-groups-simple.sql</code></li>
+              <li>Observa los mensajes en la consola:</li>
+            </ol>
+            <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside mt-2 ml-4">
+              <li>Si ves: <code className="bg-gray-100 px-1 rounded text-xs">Cannot update group: Invalid UUID format</code> → Ejecuta <code className="bg-blue-100 px-1 rounded text-xs">fix-groups-simple.sql</code></li>
+              <li>Si ves: <code className="bg-gray-100 px-1 rounded text-xs">Update returned no data</code> → Ejecuta <code className="bg-purple-100 px-1 rounded text-xs">fix-groups-rls.sql</code></li>
+              <li>Si ves: <code className="bg-gray-100 px-1 rounded text-xs">Error updating group in Supabase</code> → Ejecuta <code className="bg-purple-100 px-1 rounded text-xs">fix-groups-rls.sql</code></li>
+            </ul>
+          </div>
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <p className="text-sm font-medium text-yellow-800 mb-2">💡 Recomendación:</p>
+            <p className="text-sm text-yellow-700">
+              Si no estás seguro de cuál es el problema, ejecuta ambos scripts en orden:
+            </p>
+            <ol className="text-sm text-yellow-700 space-y-1 list-decimal list-inside mt-2">
+              <li>Primero: <code className="bg-yellow-100 px-1 rounded text-xs">fix-groups-simple.sql</code> (crea grupos con UUIDs válidos)</li>
+              <li>Segundo: <code className="bg-yellow-100 px-1 rounded text-xs">fix-groups-rls.sql</code> (corrige las políticas RLS)</li>
+              <li>Recarga la aplicación (Ctrl+F5)</li>
             </ol>
           </div>
         </div>

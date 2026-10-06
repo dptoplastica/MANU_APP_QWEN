@@ -205,17 +205,30 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const updateGroup = async (group: Group): Promise<boolean> => {
+    console.log('🔄 AppContext updateGroup - Attempting to update group:', group);
+    
     const success = await dataService.updateGroup(group);
+    
     if (success) {
+      console.log('✅ AppContext updateGroup - Update successful, updating local state');
       setGroups(prev => prev.map(g => g.id === group.id ? group : g));
     } else {
+      console.error('❌ AppContext updateGroup - Update failed in Supabase');
+      
       // Si falla, verificar si es porque el ID no es UUID válido
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       if (!uuidRegex.test(group.id)) {
-        console.warn('Group update failed: This group exists only in local seed data');
+        console.warn('⚠️ Group ID is not a valid UUID. This group exists only in local seed data.');
+        console.warn('⚠️ Updating only in local state (changes will not persist after reload)');
         // Actualizar solo en el estado local
         setGroups(prev => prev.map(g => g.id === group.id ? group : g));
         return true; // Retornar true para que la UI se actualice
+      } else {
+        console.error('❌ Group ID is valid but update failed. This indicates:');
+        console.error('  - RLS policies are blocking the update');
+        console.error('  - User does not have admin role');
+        console.error('  - Database connection issue');
+        console.error('Please run fix-groups-rls.sql to fix RLS policies');
       }
     }
     return success;
