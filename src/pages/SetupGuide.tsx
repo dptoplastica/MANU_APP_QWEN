@@ -286,13 +286,69 @@ export const SetupGuide: React.FC = () => {
       </div>
 
       {/* Instrucciones para grupos que no se guardan */}
-      <div className="bg-blue-50 border-2 border-blue-300 rounded-xl p-6">
-        <h3 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
-          <GraduationCap className="w-5 h-5" /> ¿Los cambios en grupos no se guardan?
+      <div className="bg-red-50 border-4 border-red-500 rounded-xl p-6 shadow-lg">
+        <h3 className="font-bold text-red-900 mb-3 flex items-center gap-2 text-xl">
+          <AlertCircle className="w-6 h-6" /> 🔴 SOLUCIÓN URGENTE: Error al Editar Grupos
         </h3>
-        <p className="text-sm text-blue-700 mb-4">
-          Si recibes el error "Error al actualizar el grupo" al intentar editar un grupo, el problema es de permisos en Supabase.
+        <p className="text-base text-red-800 mb-4 font-medium">
+          Si recibes el error "Error al actualizar el grupo", sigue estos pasos EXACTOS:
         </p>
+        <div className="bg-white rounded-lg p-5 mb-4 border-2 border-red-300">
+          <h4 className="font-bold text-gray-900 mb-3 text-lg">📋 Pasos a Seguir:</h4>
+          <ol className="space-y-3 text-sm">
+            <li className="flex items-start gap-2">
+              <span className="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 font-bold">1</span>
+              <span>
+                <strong>Descarga el script:</strong>{' '}
+                <button
+                  onClick={() => downloadFile(fixGroupsPermissionsContent, 'fix-groups-direct.sql')}
+                  className="text-red-600 underline font-bold hover:text-red-800"
+                >
+                  fix-groups-direct.sql
+                </button>
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 font-bold">2</span>
+              <span>
+                <strong>Abre el SQL Editor:</strong>{' '}
+                <a
+                  href="https://supabase.com/dashboard/project/sbymwyxjuxhkilwcxoed/sql/new"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 underline font-bold hover:text-blue-800"
+                >
+                  Ir al SQL Editor de Supabase
+                </a>
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 font-bold">3</span>
+              <span><strong>Copia TODO el contenido</strong> del script y pégalo en el SQL Editor</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 font-bold">4</span>
+              <span><strong>Ejecuta el script completo</strong> (botón "Run" o Ctrl+Enter)</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 font-bold">5</span>
+              <span><strong>Recarga la aplicación</strong> con Ctrl+F5</span>
+            </li>
+          </ol>
+        </div>
+        <div className="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-4">
+          <p className="text-sm text-yellow-900 font-medium">
+            💡 <strong>Alternativa:</strong> También puedes ver la guía visual completa en{' '}
+            <a
+              href="/SOLUCION_GRUPOS.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 underline font-bold hover:text-blue-800"
+            >
+              SOLUCION_GRUPOS.html
+            </a>
+          </p>
+        </div>
         <div className="space-y-3">
           <div className="bg-white border border-red-200 rounded-lg p-4">
             <p className="text-sm font-medium text-gray-800 mb-2">🔴 Solución RÁPIDA (RECOMENDADA):</p>
