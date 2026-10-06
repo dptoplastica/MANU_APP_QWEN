@@ -379,8 +379,7 @@ export const supabaseDataService = {
       .update({
         name: group.name,
         course: group.course,
-        academic_year_id: group.academicYearId,
-        updated_at: new Date().toISOString()
+        academic_year_id: group.academicYearId
       })
       .eq('id', group.id)
       .select();
