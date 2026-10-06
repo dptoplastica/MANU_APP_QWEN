@@ -18,6 +18,7 @@ export const SetupGuide: React.FC = () => {
   const [fixGroupsPermissionsContent, setFixGroupsPermissionsContent] = useState<string>('');
   const [fixGroupsFinalContent, setFixGroupsFinalContent] = useState<string>('');
   const [fixAssignmentsFinalContent, setFixAssignmentsFinalContent] = useState<string>('');
+  const [fixAssignmentsDataContent, setFixAssignmentsDataContent] = useState<string>('');
 
   useEffect(() => {
     // Cargar los archivos SQL
@@ -70,6 +71,11 @@ export const SetupGuide: React.FC = () => {
       .then(r => r.text())
       .then(setFixAssignmentsFinalContent)
       .catch(() => setFixAssignmentsFinalContent('-- No se pudo cargar fix-assignments-final.sql'));
+
+    fetch('/sql/fix-assignments-data.sql')
+      .then(r => r.text())
+      .then(setFixAssignmentsDataContent)
+      .catch(() => setFixAssignmentsDataContent('-- No se pudo cargar fix-assignments-data.sql'));
   }, []);
 
   const copyToClipboard = (text: string, stepId: string) => {
@@ -283,6 +289,19 @@ export const SetupGuide: React.FC = () => {
               <p className="text-xs text-gray-500">SOLUCIÓN DEFINITIVA: Desactivar RLS en asignaciones (si no se guardan las asignaciones)</p>
             </div>
             <Download className="w-4 h-4 text-indigo-600" />
+          </button>
+          <button
+            onClick={() => downloadFile(fixAssignmentsDataContent, 'fix-assignments-data.sql')}
+            className="flex items-center gap-3 p-4 bg-white border-2 border-teal-400 rounded-lg hover:bg-teal-50 transition-colors text-left sm:col-span-3"
+          >
+            <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <Database className="w-5 h-5 text-teal-600" />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-gray-800 text-sm">fix-assignments-data.sql</p>
+              <p className="text-xs text-gray-500">Verificar y corregir datos de asignaciones existentes (si aparecen como "Sin asignar")</p>
+            </div>
+            <Download className="w-4 h-4 text-teal-600" />
           </button>
         </div>
       </div>

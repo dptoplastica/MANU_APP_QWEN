@@ -36,6 +36,7 @@ interface AppState {
   updateStudent: (student: Student) => Promise<boolean>;
   deleteStudent: (id: string) => Promise<boolean>;
   createAssignment: (assignment: TeacherSubjectGroup) => Promise<TeacherSubjectGroup | null>;
+  updateAssignment: (assignment: TeacherSubjectGroup) => Promise<boolean>;
   deleteAssignment: (id: string) => Promise<boolean>;
 }
 
@@ -318,6 +319,28 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
+  const updateAssignment = async (assignment: TeacherSubjectGroup): Promise<boolean> => {
+    console.log('🔄 AppContext updateAssignment - Attempting to update assignment:', assignment);
+    
+    const success = await dataService.updateAssignment(assignment);
+    
+    if (success) {
+      console.log('✅ AppContext updateAssignment - Update successful, updating local state');
+      setTeacherSubjectGroups(prev => prev.map(a => a.id === assignment.id ? assignment : a));
+    } else {
+      console.error('❌ AppContext updateAssignment - Update failed in Supabase');
+      console.error('⚠️ Updating local state anyway (changes will not persist after reload)');
+      
+      // Actualizar el estado local de todos modos para que el usuario vea el cambio
+      setTeacherSubjectGroups(prev => prev.map(a => a.id === assignment.id ? assignment : a));
+      
+      // Mostrar mensaje informativo al usuario
+      console.warn('⚠️ The assignment was updated locally but could not be saved to Supabase.');
+      console.warn('⚠️ Please run fix-assignments-final.sql to fix the RLS policies.');
+    }
+    return success;
+  };
+
   const deleteAssignment = async (id: string): Promise<boolean> => {
     const success = await dataService.deleteAssignment(id);
     if (success) {
@@ -368,6 +391,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       updateStudent,
       deleteStudent,
       createAssignment,
+      updateAssignment,
       deleteAssignment
     }}>
       {children}

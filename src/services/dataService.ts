@@ -541,6 +541,50 @@ export const supabaseDataService = {
     };
   },
 
+  async updateAssignment(assignment: TeacherSubjectGroup): Promise<boolean> {
+    console.log('🔄 Supabase updateAssignment - Starting update for assignment:', assignment);
+    
+    // Validar que el ID sea un UUID válido
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(assignment.id)) {
+      console.warn('❌ Cannot update assignment: Invalid UUID format', assignment.id);
+      console.warn('This assignment exists only in local seed data and cannot be updated in Supabase');
+      return false;
+    }
+    
+    console.log('✅ UUID is valid, proceeding with update...');
+    
+    const { data, error } = await supabase
+      .from('teacher_subject_groups')
+      .update({
+        teacher_id: assignment.teacherId,
+        subject_id: assignment.subjectId,
+        group_id: assignment.groupId
+      })
+      .eq('id', assignment.id)
+      .select();
+    
+    if (error) {
+      console.error('❌ Error updating assignment in Supabase:', error);
+      console.error('Error message:', error.message);
+      console.error('Error details:', error.details);
+      console.error('Error hint:', error.hint);
+      console.error('Error code:', error.code);
+      return false;
+    }
+    
+    if (!data || data.length === 0) {
+      console.warn('⚠️ Update returned no data. This might indicate:');
+      console.warn('  - The assignment ID does not exist in Supabase');
+      console.warn('  - RLS policies are blocking the update');
+      console.warn('  - The user does not have permission to update');
+      return false;
+    }
+    
+    console.log('✅ Supabase updateAssignment - Success:', data);
+    return true;
+  },
+
   async deleteAssignment(id: string): Promise<boolean> {
     // Validar que el ID sea un UUID válido
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -679,6 +723,11 @@ export const dataService = {
   async createAssignment(assignment: TeacherSubjectGroup): Promise<TeacherSubjectGroup | null> {
     if (useSupabase) return supabaseDataService.createAssignment(assignment);
     return { ...assignment, id: `local-assignment-${Date.now()}` };
+  },
+
+  async updateAssignment(assignment: TeacherSubjectGroup): Promise<boolean> {
+    if (useSupabase) return supabaseDataService.updateAssignment(assignment);
+    return true;
   },
 
   async deleteAssignment(id: string): Promise<boolean> {

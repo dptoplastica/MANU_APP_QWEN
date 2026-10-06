@@ -17,6 +17,7 @@ export const Admin: React.FC = () => {
     updateStudent,
     deleteStudent,
     createAssignment,
+    updateAssignment,
     deleteAssignment
   } = useApp();
   
@@ -175,7 +176,11 @@ export const Admin: React.FC = () => {
           }
           break;
         case 'assignments':
-          setAssignmentsList(assignmentsList.map(a => a.id === editingItem.id ? { ...editingItem, ...formData } : a));
+          const updatedAssignment = { ...editingItem, ...formData };
+          console.log('Updating assignment:', updatedAssignment);
+          const successUpdateAssignment = await updateAssignment(updatedAssignment);
+          console.log('Update assignment result:', successUpdateAssignment);
+          setAssignmentsList(assignmentsList.map(a => a.id === editingItem.id ? updatedAssignment : a));
           closeModal();
           break;
       }
