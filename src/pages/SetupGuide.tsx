@@ -13,6 +13,7 @@ export const SetupGuide: React.FC = () => {
   const [setupCompletoContent, setSetupCompletoContent] = useState<string>('');
   const [fixUsersContent, setFixUsersContent] = useState<string>('');
   const [fixUsersNoRlsContent, setFixUsersNoRlsContent] = useState<string>('');
+  const [fixUsersFinalContent, setFixUsersFinalContent] = useState<string>('');
   const [fixGroupsSimpleContent, setFixGroupsSimpleContent] = useState<string>('');
   const [fixGroupsRlsContent, setFixGroupsRlsContent] = useState<string>('');
   const [fixGroupsPermissionsContent, setFixGroupsPermissionsContent] = useState<string>('');
@@ -46,6 +47,11 @@ export const SetupGuide: React.FC = () => {
       .then(r => r.text())
       .then(setFixUsersNoRlsContent)
       .catch(() => setFixUsersNoRlsContent('-- No se pudo cargar fix-users-no-rls.sql'));
+
+    fetch('/sql/fix-users-final.sql')
+      .then(r => r.text())
+      .then(setFixUsersFinalContent)
+      .catch(() => setFixUsersFinalContent('-- No se pudo cargar fix-users-final.sql'));
 
     fetch('/sql/fix-groups-simple.sql')
       .then(r => r.text())
@@ -226,6 +232,19 @@ export const SetupGuide: React.FC = () => {
             <Download className="w-4 h-4 text-green-600" />
           </button>
           <button
+            onClick={() => downloadFile(fixUsersFinalContent, 'fix-users-final.sql')}
+            className="flex items-center gap-3 p-4 bg-white border-2 border-red-500 rounded-lg hover:bg-red-50 transition-colors text-left sm:col-span-3"
+          >
+            <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <AlertCircle className="w-5 h-5 text-red-600" />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-gray-800 text-sm">fix-users-final.sql</p>
+              <p className="text-xs text-gray-500">SOLUCIÓN DEFINITIVA: Error 500 en tabla users (desactiva RLS)</p>
+            </div>
+            <Download className="w-4 h-4 text-red-600" />
+          </button>
+          <button
             onClick={() => downloadFile(fixGroupsSimpleContent, 'fix-groups-simple.sql')}
             className="flex items-center gap-3 p-4 bg-white border-2 border-blue-400 rounded-lg hover:bg-blue-50 transition-colors text-left sm:col-span-3"
           >
@@ -339,6 +358,78 @@ export const SetupGuide: React.FC = () => {
               El error 500 en la tabla users no impide el funcionamiento básico de la aplicación.
             </p>
           </div>
+        </div>
+      </div>
+
+      {/* Instrucciones para error 500 en tabla users */}
+      <div className="bg-red-50 border-4 border-red-600 rounded-xl p-6 shadow-lg">
+        <h3 className="font-bold text-red-900 mb-3 flex items-center gap-2 text-xl">
+          <AlertCircle className="w-6 h-6" /> 🔴 ERROR 500 EN TABLA USERS - SOLUCIÓN URGENTE
+        </h3>
+        <p className="text-base text-red-800 mb-4 font-medium">
+          Si ves en la consola el error <code className="bg-red-100 px-2 py-0.5 rounded text-red-900">500 (Internal Server Error)</code> en la tabla <code className="bg-red-100 px-2 py-0.5 rounded text-red-900">users</code>, 
+          sigue estos pasos EXACTOS para resolverlo:
+        </p>
+        <div className="bg-white rounded-lg p-5 mb-4 border-2 border-red-300">
+          <h4 className="font-bold text-gray-900 mb-3 text-lg">📋 Pasos a Seguir:</h4>
+          <ol className="space-y-3 text-sm">
+            <li className="flex items-start gap-2">
+              <span className="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 font-bold">1</span>
+              <span>
+                <strong>Descarga el script:</strong>{' '}
+                <button
+                  onClick={() => downloadFile(fixUsersFinalContent, 'fix-users-final.sql')}
+                  className="text-red-600 underline font-bold hover:text-red-800"
+                >
+                  fix-users-final.sql
+                </button>
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 font-bold">2</span>
+              <span>
+                <strong>Abre el SQL Editor:</strong>{' '}
+                <a
+                  href="https://supabase.com/dashboard/project/sbymwyxjuxhkilwcxoed/sql/new"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 underline font-bold hover:text-blue-800"
+                >
+                  Ir al SQL Editor de Supabase
+                </a>
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 font-bold">3</span>
+              <span><strong>Copia TODO el contenido</strong> del script y pégalo en el SQL Editor</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 font-bold">4</span>
+              <span><strong>Ejecuta el script completo</strong> (botón "Run" o Ctrl+Enter)</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 font-bold">5</span>
+              <span><strong>Recarga la aplicación</strong> con Ctrl+F5</span>
+            </li>
+          </ol>
+        </div>
+        <div className="bg-white border border-red-200 rounded-lg p-4 mb-4">
+          <p className="text-sm font-medium text-gray-800 mb-2">🔍 ¿Qué hace este script?</p>
+          <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
+            <li><strong>Desactiva RLS completamente</strong> en la tabla <code className="bg-gray-100 px-1 rounded text-xs">users</code></li>
+            <li>Elimina todas las políticas RLS problemáticas</li>
+            <li>Verifica que tu usuario tenga rol de administrador</li>
+            <li>Te asigna rol de administrador si no lo tienes</li>
+            <li>Resuelve el error 500 de forma permanente</li>
+          </ul>
+        </div>
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+          <p className="text-sm font-medium text-yellow-800 mb-2">⚠️ IMPORTANTE:</p>
+          <p className="text-sm text-yellow-700">
+            Este script es la <strong>SOLUCIÓN DEFINITIVA</strong> para el error 500 en la tabla users. 
+            Después de ejecutarlo, el error debería desaparecer permanentemente. 
+            Si sigues viendo el error después de ejecutar el script, recarga la página con Ctrl+F5.
+          </p>
         </div>
       </div>
 
