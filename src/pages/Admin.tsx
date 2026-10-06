@@ -88,9 +88,11 @@ export const Admin: React.FC = () => {
       switch (activeTab) {
         case 'teachers':
           setUsersList([...usersList, newItem]);
+          closeModal();
           break;
         case 'subjects':
           setSubjectsList([...subjectsList, newItem]);
+          closeModal();
           break;
         case 'groups':
           console.log('Creating group:', newItem);
@@ -107,16 +109,28 @@ export const Admin: React.FC = () => {
           const createdStudent = await createStudent(newItem as Student);
           if (createdStudent) {
             setStudentsList([...studentsList, createdStudent]);
+            closeModal();
           } else {
             alert('Error al crear el alumno. Verifica que todos los campos estén completos.');
           }
           break;
         case 'assignments':
+          console.log('Creating assignment - formData:', formData);
+          console.log('Creating assignment - newItem:', newItem);
+          
+          // Validar que todos los campos requeridos estén presentes
+          if (!newItem.teacherId || !newItem.subjectId || !newItem.groupId) {
+            alert('Error: Debes seleccionar un profesor, una materia y un grupo.');
+            return;
+          }
+          
           const createdAssignment = await createAssignment(newItem as TeacherSubjectGroup);
+          console.log('Created assignment result:', createdAssignment);
           if (createdAssignment) {
             setAssignmentsList([...assignmentsList, createdAssignment]);
+            closeModal();
           } else {
-            alert('Error al crear la asignación. Verifica que todos los campos estén completos.');
+            alert('Error al crear la asignación. Verifica la consola del navegador para más detalles.');
           }
           break;
       }
@@ -125,15 +139,18 @@ export const Admin: React.FC = () => {
       switch (activeTab) {
         case 'teachers':
           setUsersList(usersList.map(u => u.id === editingItem.id ? { ...editingItem, ...formData } : u));
+          closeModal();
           break;
         case 'subjects':
           setSubjectsList(subjectsList.map(s => s.id === editingItem.id ? { ...editingItem, ...formData } : s));
+          closeModal();
           break;
         case 'groups':
           const updatedGroup = { ...editingItem, ...formData };
           const successUpdateGroup = await updateGroup(updatedGroup);
           if (successUpdateGroup) {
             setGroupsList(groupsList.map(g => g.id === editingItem.id ? updatedGroup : g));
+            closeModal();
           }
           break;
         case 'students':
@@ -141,15 +158,15 @@ export const Admin: React.FC = () => {
           const successUpdateStudent = await updateStudent(updatedStudent);
           if (successUpdateStudent) {
             setStudentsList(studentsList.map(s => s.id === editingItem.id ? updatedStudent : s));
+            closeModal();
           }
           break;
         case 'assignments':
           setAssignmentsList(assignmentsList.map(a => a.id === editingItem.id ? { ...editingItem, ...formData } : a));
+          closeModal();
           break;
       }
     }
-    
-    closeModal();
   };
 
   const handleDelete = async (id: string) => {

@@ -466,6 +466,18 @@ export const supabaseDataService = {
 
   // CRUD para Asignaciones Profesor-Materia-Grupo
   async createAssignment(assignment: TeacherSubjectGroup): Promise<TeacherSubjectGroup | null> {
+    console.log('Supabase createAssignment - Input:', assignment);
+    
+    // Validar que todos los campos requeridos estén presentes
+    if (!assignment.teacherId || !assignment.subjectId || !assignment.groupId) {
+      console.error('Missing required fields:', {
+        teacherId: assignment.teacherId,
+        subjectId: assignment.subjectId,
+        groupId: assignment.groupId
+      });
+      return null;
+    }
+    
     const { data, error } = await supabase
       .from('teacher_subject_groups')
       .insert({
@@ -478,8 +490,11 @@ export const supabaseDataService = {
     
     if (error) {
       console.error('Error creating assignment:', error.message);
+      console.error('Error details:', error);
       return null;
     }
+    
+    console.log('Supabase createAssignment - Success:', data);
     
     return {
       id: data.id,
