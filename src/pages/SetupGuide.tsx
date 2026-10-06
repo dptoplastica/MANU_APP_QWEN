@@ -15,6 +15,7 @@ export const SetupGuide: React.FC = () => {
   const [fixUsersNoRlsContent, setFixUsersNoRlsContent] = useState<string>('');
   const [fixUsersFinalContent, setFixUsersFinalContent] = useState<string>('');
   const [createAdminUserContent, setCreateAdminUserContent] = useState<string>('');
+  const [fixAuthContent, setFixAuthContent] = useState<string>('');
   const [fixGroupsSimpleContent, setFixGroupsSimpleContent] = useState<string>('');
   const [fixGroupsRlsContent, setFixGroupsRlsContent] = useState<string>('');
   const [fixGroupsPermissionsContent, setFixGroupsPermissionsContent] = useState<string>('');
@@ -58,6 +59,11 @@ export const SetupGuide: React.FC = () => {
       .then(r => r.text())
       .then(setCreateAdminUserContent)
       .catch(() => setCreateAdminUserContent('-- No se pudo cargar create-admin-user.sql'));
+
+    fetch('/sql/fix-auth.sql')
+      .then(r => r.text())
+      .then(setFixAuthContent)
+      .catch(() => setFixAuthContent('-- No se pudo cargar fix-auth.sql'));
 
     fetch('/sql/fix-groups-simple.sql')
       .then(r => r.text())
@@ -264,6 +270,19 @@ export const SetupGuide: React.FC = () => {
             <Download className="w-4 h-4 text-purple-600" />
           </button>
           <button
+            onClick={() => downloadFile(fixAuthContent, 'fix-auth.sql')}
+            className="flex items-center gap-3 p-4 bg-white border-2 border-orange-500 rounded-lg hover:bg-orange-50 transition-colors text-left sm:col-span-3"
+          >
+            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <AlertCircle className="w-5 h-5 text-orange-600" />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-gray-800 text-sm">fix-auth.sql</p>
+              <p className="text-xs text-gray-500">Habilitar autenticación y crear usuarios (SOLUCIÓN AL ERROR 400)</p>
+            </div>
+            <Download className="w-4 h-4 text-orange-600" />
+          </button>
+          <button
             onClick={() => downloadFile(fixGroupsSimpleContent, 'fix-groups-simple.sql')}
             className="flex items-center gap-3 p-4 bg-white border-2 border-blue-400 rounded-lg hover:bg-blue-50 transition-colors text-left sm:col-span-3"
           >
@@ -443,6 +462,104 @@ export const SetupGuide: React.FC = () => {
             💡 <strong>Guía visual completa:</strong>{' '}
             <a
               href="/COMO_ENTRAR_COMO_ADMINISTRADOR.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 underline font-bold hover:text-blue-800"
+            >
+              Ver guía paso a paso con imágenes
+            </a>
+          </p>
+        </div>
+      </div>
+
+      {/* Instrucciones para error 400 en autenticación */}
+      <div className="bg-orange-50 border-4 border-orange-500 rounded-xl p-6 shadow-lg">
+        <h3 className="font-bold text-orange-900 mb-3 flex items-center gap-2 text-xl">
+          <AlertCircle className="w-6 h-6" /> 🟠 ERROR 400 EN AUTENTICACIÓN - SOLUCIÓN
+        </h3>
+        <p className="text-base text-orange-800 mb-4 font-medium">
+          Si ves en la consola el error <code className="bg-orange-100 px-2 py-0.5 rounded text-orange-900">400 (Bad Request)</code> en <code className="bg-orange-100 px-2 py-0.5 rounded text-orange-900">/auth/v1/token?grant_type=password</code>, 
+          sigue estos pasos EXACTOS para resolverlo:
+        </p>
+        <div className="bg-white rounded-lg p-5 mb-4 border-2 border-orange-300">
+          <h4 className="font-bold text-gray-900 mb-3 text-lg">📋 Pasos a Seguir:</h4>
+          <ol className="space-y-3 text-sm">
+            <li className="flex items-start gap-2">
+              <span className="bg-orange-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 font-bold">1</span>
+              <span>
+                <strong>Habilitar Email Provider en Supabase:</strong>{' '}
+                <a
+                  href="https://supabase.com/dashboard/project/sbymwyxjuxhkilwcxoed/auth/providers"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 underline font-bold hover:text-blue-800"
+                >
+                  Ir a Authentication → Providers → Email
+                </a>
+                <div className="mt-2 ml-8 text-xs text-gray-600">
+                  <div className="bg-blue-50 border border-blue-200 rounded p-2 mt-1">
+                    ✅ <strong>Enable Email provider</strong>: Activado<br/>
+                    ❌ <strong>Confirm email</strong>: Desactivado
+                  </div>
+                </div>
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="bg-orange-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 font-bold">2</span>
+              <span>
+                <strong>Crear usuarios en Supabase Auth:</strong>{' '}
+                <a
+                  href="https://supabase.com/dashboard/project/sbymwyxjuxhkilwcxoed/auth/users"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 underline font-bold hover:text-blue-800"
+                >
+                  Ir a Authentication → Users
+                </a>
+                <div className="mt-2 ml-8 text-xs text-gray-600">
+                  <div className="bg-green-50 border border-green-200 rounded p-2 mt-1">
+                    <strong>Admin:</strong> admin@ieslopedevega.es / Admin2026!<br/>
+                    <strong>Profesor:</strong> profesor@ieslopedevega.es / Prof2026!<br/>
+                    ✓ <strong>Auto Confirm User</strong>: Marcado
+                  </div>
+                </div>
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="bg-orange-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 font-bold">3</span>
+              <span>
+                <strong>Descargar y ejecutar script:</strong>{' '}
+                <button
+                  onClick={() => downloadFile(fixAuthContent, 'fix-auth.sql')}
+                  className="text-orange-600 underline font-bold hover:text-orange-800"
+                >
+                  fix-auth.sql
+                </button>
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="bg-orange-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 font-bold">4</span>
+              <span><strong>Recargar la aplicación</strong> con Ctrl+F5</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="bg-orange-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 font-bold">5</span>
+              <span>
+                <strong>Iniciar sesión:</strong>
+                <div className="mt-2 ml-8 text-xs text-gray-600">
+                  <div className="bg-purple-50 border border-purple-200 rounded p-2 mt-1">
+                    <strong>Email:</strong> admin@ieslopedevega.es<br/>
+                    <strong>Password:</strong> Admin2026!
+                  </div>
+                </div>
+              </span>
+            </li>
+          </ol>
+        </div>
+        <div className="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-4">
+          <p className="text-sm text-yellow-900 font-medium">
+            💡 <strong>Guía visual completa:</strong>{' '}
+            <a
+              href="/SOLUCION_ERROR_400_AUTH.html"
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 underline font-bold hover:text-blue-800"
