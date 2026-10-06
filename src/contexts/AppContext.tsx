@@ -19,7 +19,7 @@ interface AppState {
   competencyAssessments: CompetencyAssessment[];
   reports: Report[];
   notifications: Notification[];
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<{ success: boolean; mode?: 'supabase' | 'local'; error?: string }>;
   logout: () => Promise<void>;
   updateGrade: (grade: Grade) => Promise<void>;
   updateLearningSituation: (sda: LearningSituation) => void;
@@ -136,18 +136,29 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     init();
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<{ success: boolean; mode?: 'supabase' | 'local'; error?: string }> => {
     try {
       const result = await dataService.login(email, password);
       if (result.success && result.user) {
         setCurrentUser(result.user);
         setIsAuthenticated(true);
-        return true;
+        
+        // Mostrar mensaje según el modo de autenticación
+        if (result.mode === 'local') {
+          console.log('📦 ⚠️ ATENCIÓN: Sesión iniciada en MODO LOCAL');
+          console.log('📦 Los datos NO se persisten en Supabase');
+          console.log('📦 Para persistencia completa, configura Supabase Auth correctamente');
+        } else {
+          console.log('🌐 ✅ Sesión iniciada con Supabase');
+          console.log('🌐 Los datos se persisten en Supabase');
+        }
+        
+        return { success: true, mode: result.mode };
       }
-      return false;
+      return { success: false, error: result.error || 'Error desconocido' };
     } catch (error) {
-      console.error('Login error:', error);
-      return false;
+      console.error('❌ Login error:', error);
+      return { success: false, error: 'Error de conexión' };
     }
   };
 

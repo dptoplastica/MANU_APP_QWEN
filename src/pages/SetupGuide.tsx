@@ -17,6 +17,7 @@ export const SetupGuide: React.FC = () => {
   const [createAdminUserContent, setCreateAdminUserContent] = useState<string>('');
   const [fixAuthContent, setFixAuthContent] = useState<string>('');
   const [fixGroupsSimpleContent, setFixGroupsSimpleContent] = useState<string>('');
+  const [fixAuthCompleteContent, setFixAuthCompleteContent] = useState<string>('');
   const [fixGroupsRlsContent, setFixGroupsRlsContent] = useState<string>('');
   const [fixGroupsPermissionsContent, setFixGroupsPermissionsContent] = useState<string>('');
   const [fixGroupsFinalContent, setFixGroupsFinalContent] = useState<string>('');
@@ -64,6 +65,11 @@ export const SetupGuide: React.FC = () => {
       .then(r => r.text())
       .then(setFixAuthContent)
       .catch(() => setFixAuthContent('-- No se pudo cargar fix-auth.sql'));
+
+    fetch('/sql/fix-auth-complete.sql')
+      .then(r => r.text())
+      .then(setFixAuthCompleteContent)
+      .catch(() => setFixAuthCompleteContent('-- No se pudo cargar fix-auth-complete.sql'));
 
     fetch('/sql/fix-groups-simple.sql')
       .then(r => r.text())
@@ -281,6 +287,19 @@ export const SetupGuide: React.FC = () => {
               <p className="text-xs text-gray-500">Habilitar autenticación y crear usuarios (SOLUCIÓN AL ERROR 400)</p>
             </div>
             <Download className="w-4 h-4 text-orange-600" />
+          </button>
+          <button
+            onClick={() => downloadFile(fixAuthCompleteContent, 'fix-auth-complete.sql')}
+            className="flex items-center gap-3 p-4 bg-white border-2 border-green-500 rounded-lg hover:bg-green-50 transition-colors text-left sm:col-span-3"
+          >
+            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <CheckCircle className="w-5 h-5 text-green-600" />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-gray-800 text-sm">fix-auth-complete.sql</p>
+              <p className="text-xs text-gray-500">Configuración completa de autenticación (RECOMENDADO)</p>
+            </div>
+            <Download className="w-4 h-4 text-green-600" />
           </button>
           <button
             onClick={() => downloadFile(fixGroupsSimpleContent, 'fix-groups-simple.sql')}
@@ -529,6 +548,13 @@ export const SetupGuide: React.FC = () => {
               <span className="bg-orange-500 text-white rounded-full w-6 h-6 flex items-center justify-center flex-shrink-0 font-bold">3</span>
               <span>
                 <strong>Descargar y ejecutar script:</strong>{' '}
+                <button
+                  onClick={() => downloadFile(fixAuthCompleteContent, 'fix-auth-complete.sql')}
+                  className="text-green-600 underline font-bold hover:text-green-800"
+                >
+                  fix-auth-complete.sql (RECOMENDADO)
+                </button>
+                <span className="text-gray-500 mx-2">o</span>
                 <button
                   onClick={() => downloadFile(fixAuthContent, 'fix-auth.sql')}
                   className="text-orange-600 underline font-bold hover:text-orange-800"

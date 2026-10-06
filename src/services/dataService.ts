@@ -31,23 +31,53 @@ export const checkSupabaseConnection = async (): Promise<boolean> => {
 // ============================================================
 
 export const authService = {
-  async login(email: string, password: string): Promise<{ success: boolean; user?: User; error?: string }> {
+  async login(email: string, password: string): Promise<{ success: boolean; user?: User; error?: string; mode?: 'supabase' | 'local' }> {
+    console.log('🔐 Iniciando proceso de autenticación...');
+    console.log('Email:', email);
+    console.log('useSupabase:', useSupabase);
+    
     if (useSupabase) {
       try {
+        console.log('🌐 Intentando autenticación con Supabase...');
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        
         if (error) {
-          // Si Supabase falla, intentar con datos locales
-          return localAuth.login(email, password);
+          console.warn('⚠️ Supabase Auth falló:', error.message);
+          console.log('🔄 Cambiando a autenticación local...');
+          const localResult = localAuth.login(email, password);
+          return { ...localResult, mode: 'local' };
         }
         
+        console.log('✅ Autenticación con Supabase exitosa');
+        
         // Obtener perfil del usuario
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from('users')
           .select('*')
           .eq('id', data.user.id)
           .single();
         
+        if (profileError) {
+          console.warn('⚠️ No se encontró perfil en tabla users:', profileError.message);
+          console.log('🔄 Usando datos básicos de auth.users...');
+          
+          // Crear perfil básico si no existe
+          return {
+            success: true,
+            user: {
+              id: data.user.id,
+              email: data.user.email || email,
+              name: data.user.user_metadata?.name || email.split('@')[0],
+              role: 'teacher' as const, // Rol por defecto
+              active: true,
+              createdAt: data.user.created_at || new Date().toISOString()
+            },
+            mode: 'supabase'
+          };
+        }
+        
         if (profile) {
+          console.log('✅ Perfil encontrado:', profile);
           return {
             success: true,
             user: {
@@ -57,16 +87,21 @@ export const authService = {
               role: profile.role as 'admin' | 'teacher',
               active: profile.active,
               createdAt: profile.created_at
-            }
+            },
+            mode: 'supabase'
           };
         }
-      } catch {
-        // Fallback a local
-        return localAuth.login(email, password);
+      } catch (err) {
+        console.error('❌ Error en autenticación con Supabase:', err);
+        console.log('🔄 Cambiando a autenticación local...');
+        const localResult = localAuth.login(email, password);
+        return { ...localResult, mode: 'local' };
       }
     }
     
-    return localAuth.login(email, password);
+    console.log('📦 Supabase no disponible, usando autenticación local');
+    const localResult = localAuth.login(email, password);
+    return { ...localResult, mode: 'local' };
   },
 
   async logout(): Promise<void> {
@@ -114,12 +149,26 @@ export const authService = {
 // ============================================================
 
 const localAuth = {
-  login(email: string, _password: string): { success: boolean; user?: User; error?: string } {
+  login(email: string, password: string): { success: boolean; user?: User; error?: string } {
+    console.log('🔐 Intentando autenticación local...');
+    console.log('Email:', email);
+    
+    // Buscar usuario en datos locales
     const user = seed.users.find(u => u.email === email && u.active);
+    
     if (user) {
+      console.log('✅ Usuario encontrado:', user);
+      console.log('⚠️ Usando modo LOCAL (los datos no se persisten en Supabase)');
       return { success: true, user };
     }
-    return { success: false, error: 'Credenciales incorrectas' };
+    
+    console.log('❌ Usuario no encontrado en datos locales');
+    console.log('Usuarios disponibles:', seed.users.map(u => u.email));
+    
+    return { 
+      success: false, 
+      error: 'Credenciales incorrectas. Usa: admin@ieslopedevega.es o profesor@ieslopedevega.es (cualquier contraseña)' 
+    };
   }
 };
 

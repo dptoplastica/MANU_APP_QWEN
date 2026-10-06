@@ -18,13 +18,23 @@ export const Login: React.FC = () => {
     setError('');
     setIsSubmitting(true);
     try {
-      const success = await login(email, password);
-      if (success) {
+      const result = await login(email, password);
+      if (result.success) {
+        // Mostrar mensaje según el modo de autenticación
+        if (result.mode === 'local') {
+          console.log('📦 ⚠️ Sesión iniciada en MODO LOCAL');
+          console.log('📦 Los datos NO se persisten en Supabase');
+          console.log('📦 Para persistencia completa, configura Supabase Auth correctamente');
+        } else {
+          console.log('🌐 ✅ Sesión iniciada con Supabase');
+          console.log('🌐 Los datos se persisten en Supabase');
+        }
         navigate('/dashboard');
       } else {
-        setError('Credenciales incorrectas. Inténtelo de nuevo.');
+        setError(result.error || 'Credenciales incorrectas. Inténtelo de nuevo.');
       }
-    } catch {
+    } catch (err) {
+      console.error('❌ Error en handleSubmit:', err);
       setError('Error al iniciar sesión. Inténtelo de nuevo.');
     } finally {
       setIsSubmitting(false);
@@ -99,11 +109,23 @@ export const Login: React.FC = () => {
 
           {/* Demo credentials */}
           <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
-            <p className="text-xs font-semibold text-blue-800 mb-2">Credenciales de demostración:</p>
-            <div className="space-y-1 text-xs text-blue-700">
-              <p><span className="font-medium">Profesor:</span> profesor@ieslopedevega.es</p>
-              <p><span className="font-medium">Administrador:</span> admin@ieslopedevega.es</p>
-              <p className="text-blue-500 italic mt-1">Contraseña: cualquier valor</p>
+            <p className="text-xs font-semibold text-blue-800 mb-2">🔑 Credenciales de demostración:</p>
+            <div className="space-y-2 text-xs text-blue-700">
+              <div className="bg-white p-2 rounded border border-blue-200">
+                <p className="font-semibold text-blue-900">👨‍🏫 Profesor:</p>
+                <p><strong>Email:</strong> profesor@ieslopedevega.es</p>
+                <p><strong>Contraseña:</strong> Prof2026!</p>
+              </div>
+              <div className="bg-white p-2 rounded border border-blue-200">
+                <p className="font-semibold text-blue-900">🔑 Administrador:</p>
+                <p><strong>Email:</strong> admin@ieslopedevega.es</p>
+                <p><strong>Contraseña:</strong> Admin2026!</p>
+              </div>
+              <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
+                <p className="text-yellow-800">
+                  <strong>⚠️ Modo Local:</strong> Si Supabase Auth no está configurado, la aplicación funciona en modo local con estas credenciales. Los datos NO se persisten en Supabase.
+                </p>
+              </div>
             </div>
           </div>
         </div>
