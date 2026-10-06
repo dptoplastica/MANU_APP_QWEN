@@ -16,6 +16,7 @@ export const SetupGuide: React.FC = () => {
   const [fixGroupsSimpleContent, setFixGroupsSimpleContent] = useState<string>('');
   const [fixGroupsRlsContent, setFixGroupsRlsContent] = useState<string>('');
   const [fixGroupsPermissionsContent, setFixGroupsPermissionsContent] = useState<string>('');
+  const [fixGroupsFinalContent, setFixGroupsFinalContent] = useState<string>('');
 
   useEffect(() => {
     // Cargar los archivos SQL
@@ -58,6 +59,11 @@ export const SetupGuide: React.FC = () => {
       .then(r => r.text())
       .then(setFixGroupsPermissionsContent)
       .catch(() => setFixGroupsPermissionsContent('-- No se pudo cargar fix-groups-permissions.sql'));
+
+    fetch('/sql/fix-groups-final.sql')
+      .then(r => r.text())
+      .then(setFixGroupsFinalContent)
+      .catch(() => setFixGroupsFinalContent('-- No se pudo cargar fix-groups-final.sql'));
   }, []);
 
   const copyToClipboard = (text: string, stepId: string) => {
@@ -246,6 +252,19 @@ export const SetupGuide: React.FC = () => {
             </div>
             <Download className="w-4 h-4 text-red-600" />
           </button>
+          <button
+            onClick={() => downloadFile(fixGroupsFinalContent, 'fix-groups-final.sql')}
+            className="flex items-center gap-3 p-4 bg-white border-2 border-red-600 rounded-lg hover:bg-red-50 transition-colors text-left sm:col-span-3"
+          >
+            <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <AlertCircle className="w-5 h-5 text-red-600" />
+            </div>
+            <div className="flex-1">
+              <p className="font-medium text-gray-800 text-sm">fix-groups-final.sql</p>
+              <p className="text-xs text-gray-500">SOLUCIÓN DEFINITIVA: Desactivar RLS en grupos (si ves error de recursión infinita)</p>
+            </div>
+            <Download className="w-4 h-4 text-red-600" />
+          </button>
         </div>
       </div>
 
@@ -288,10 +307,11 @@ export const SetupGuide: React.FC = () => {
       {/* Instrucciones para grupos que no se guardan */}
       <div className="bg-red-50 border-4 border-red-500 rounded-xl p-6 shadow-lg">
         <h3 className="font-bold text-red-900 mb-3 flex items-center gap-2 text-xl">
-          <AlertCircle className="w-6 h-6" /> 🔴 SOLUCIÓN URGENTE: Error al Editar Grupos
+          <AlertCircle className="w-6 h-6" /> 🔴 SOLUCIÓN DEFINITIVA: Error de Recursión Infinita
         </h3>
         <p className="text-base text-red-800 mb-4 font-medium">
-          Si recibes el error "Error al actualizar el grupo", sigue estos pasos EXACTOS:
+          Si ves el error <code className="bg-red-100 px-2 py-0.5 rounded text-red-900">infinite recursion detected in policy for relation "users"</code>, 
+          sigue estos pasos EXACTOS:
         </p>
         <div className="bg-white rounded-lg p-5 mb-4 border-2 border-red-300">
           <h4 className="font-bold text-gray-900 mb-3 text-lg">📋 Pasos a Seguir:</h4>
@@ -301,10 +321,10 @@ export const SetupGuide: React.FC = () => {
               <span>
                 <strong>Descarga el script:</strong>{' '}
                 <button
-                  onClick={() => downloadFile(fixGroupsPermissionsContent, 'fix-groups-direct.sql')}
+                  onClick={() => downloadFile(fixGroupsFinalContent, 'fix-groups-final.sql')}
                   className="text-red-600 underline font-bold hover:text-red-800"
                 >
-                  fix-groups-direct.sql
+                  fix-groups-final.sql
                 </button>
               </span>
             </li>
@@ -351,12 +371,12 @@ export const SetupGuide: React.FC = () => {
         </div>
         <div className="space-y-3">
           <div className="bg-white border border-red-200 rounded-lg p-4">
-            <p className="text-sm font-medium text-gray-800 mb-2">🔴 Solución RÁPIDA (RECOMENDADA):</p>
+            <p className="text-sm font-medium text-gray-800 mb-2">🔴 Solución DEFINITIVA (RECOMENDADA):</p>
             <p className="text-sm text-gray-700 mb-2">
-              Usa el script <code className="bg-red-100 px-2 py-0.5 rounded text-red-800">fix-groups-permissions.sql</code> (botón rojo de arriba)
+              Usa el script <code className="bg-red-100 px-2 py-0.5 rounded text-red-800">fix-groups-final.sql</code> (botón rojo de arriba)
             </p>
             <ol className="text-sm text-gray-700 space-y-1 list-decimal list-inside mt-2">
-              <li>Descarga el script <code className="bg-red-100 px-1 rounded text-xs">fix-groups-permissions.sql</code></li>
+              <li>Descarga el script <code className="bg-red-100 px-1 rounded text-xs">fix-groups-final.sql</code></li>
               <li>Ve al SQL Editor de Supabase</li>
               <li>Copia y pega TODO el contenido del script</li>
               <li>Ejecuta el script completo</li>
@@ -367,12 +387,11 @@ export const SetupGuide: React.FC = () => {
           <div className="bg-white border border-gray-200 rounded-lg p-4">
             <p className="text-sm font-medium text-gray-800 mb-2">🔍 ¿Qué hace este script?</p>
             <ul className="text-sm text-gray-700 space-y-1 list-disc list-inside">
-              <li>Verifica la estructura de la tabla <code className="bg-gray-100 px-1 rounded text-xs">groups</code></li>
-              <li>Muestra las políticas RLS actuales</li>
-              <li>Verifica tu usuario y su rol</li>
-              <li>Elimina políticas restrictivas</li>
-              <li>Crea nuevas políticas permisivas para administradores</li>
-              <li>Te permite probar la actualización manualmente</li>
+              <li><strong>Desactiva RLS completamente</strong> en la tabla <code className="bg-gray-100 px-1 rounded text-xs">groups</code></li>
+              <li>Elimina todas las políticas RLS existentes</li>
+              <li>Permite que cualquier usuario autenticado gestione grupos</li>
+              <li>Resuelve el error de recursión infinita</li>
+              <li>Es la solución más simple y efectiva</li>
             </ul>
           </div>
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">

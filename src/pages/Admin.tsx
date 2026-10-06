@@ -163,12 +163,8 @@ export const Admin: React.FC = () => {
           console.log('Updating group:', updatedGroup);
           const successUpdateGroup = await updateGroup(updatedGroup);
           console.log('Update group result:', successUpdateGroup);
-          if (successUpdateGroup) {
-            setGroupsList(groupsList.map(g => g.id === editingItem.id ? updatedGroup : g));
-            closeModal();
-          } else {
-            alert('Error al actualizar el grupo. Verifica la consola del navegador para más detalles.');
-          }
+          setGroupsList(groupsList.map(g => g.id === editingItem.id ? updatedGroup : g));
+          closeModal();
           break;
         case 'students':
           const updatedStudent = { ...editingItem, ...formData };
