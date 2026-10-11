@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solución: Error al Editar Grupos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
+        .alert {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 20px;
+            margin-bottom: 30px;
+            border-radius: 8px;
+        }
+        .alert h2 {
+            color: #92400e;
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+        .alert p {
+            color: #78350f;
+            line-height: 1.6;
+        }
+        .step {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 2px solid #e5e7eb;
+        }
+        .step:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+        }
+        .step-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 35px;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        .step h3 {
+            display: inline;
+            color: #1f2937;
+            font-size: 20px;
+        }
+        .step-content {
+            margin-top: 15px;
+            margin-left: 50px;
+        }
+        .step p {
+            color: #4b5563;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+        .code-block {
+            background: #1f2937;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .button {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            margin: 10px 10px 10px 0;
+            transition: all 0.3s;
+        }
+        .button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .button-secondary {
+            background: #10b981;
+        }
+        .button-secondary:hover {
+            background: #059669;
+        }
+        .success {
+            background: #d1fae5;
+            border-left: 4px solid #10b981;
+            padding: 20px;
+            margin-top: 30px;
+            border-radius: 8px;
+        }
+        .success h2 {
+            color: #065f46;
+            margin-bottom: 10px;
+        }
+        .success p {
+            color: #047857;
+            line-height: 1.6;
+        }
+        .warning {
+            background: #fee2e2;
+            border-left: 4px solid #ef4444;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 8px;
+        }
+        .warning h3 {
+            color: #991b1b;
+            margin-bottom: 10px;
+        }
+        .warning p {
+            color: #7f1d1d;
+            line-height: 1.6;
+        }
+        ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+        li {
+            color: #4b5563;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Solución: Error al Editar Grupos</h1>
+        <p class="subtitle">Guía paso a paso para resolver el problema de permisos en Supabase</p>
+
+        <div class="alert">
+            <h2>⚠️ Problema Identificado</h2>
+            <p>Las políticas de seguridad (RLS) de Supabase están bloqueando las actualizaciones en la tabla <code>groups</code>. Esto impide que puedas guardar los cambios cuando editas un grupo.</p>
+        </div>
+
+        <div class="step">
+            <span class="step-number">1</span>
+            <h3>Descargar el Script de Solución</h3>
+            <div class="step-content">
+                <p>Haz clic en el botón para descargar el script SQL que corregirá el problema:</p>
+                <a href="/sql/fix-groups-direct.sql" download class="button">📥 Descargar fix-groups-direct.sql</a>
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">2</span>
+            <h3>Abrir el SQL Editor de Supabase</h3>
+            <div class="step-content">
+                <p>Abre el SQL Editor de tu proyecto de Supabase:</p>
+                <a href="https://supabase.com/dashboard/project/sbymwyxjuxhkilwcxoed/sql/new" target="_blank" class="button button-secondary">🔗 Abrir SQL Editor</a>
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">3</span>
+            <h3>Copiar y Ejecutar el Script</h3>
+            <div class="step-content">
+                <p>Sigue estos pasos:</p>
+                <ul>
+                    <li>Abre el archivo <code>fix-groups-direct.sql</code> que descargaste</li>
+                    <li>Copia <strong>TODO</strong> el contenido del archivo</li>
+                    <li>Pégalo en el SQL Editor de Supabase</li>
+                    <li>Haz clic en el botón <strong>"Run"</strong> (o presiona Ctrl+Enter)</li>
+                </ul>
+                <div class="code-block">
+                    -- El script debe ejecutarse completo sin errores<br>
+                    -- Verás mensajes de confirmación al final
+                </div>
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">4</span>
+            <h3>Verificar tu Rol de Usuario</h3>
+            <div class="step-content">
+                <p>El script te mostrará tu usuario actual. Si tu rol NO es <code>admin</code>, ejecuta esta consulta:</p>
+                <div class="code-block">
+UPDATE users <br>
+SET role = 'admin', active = true<br>
+WHERE id = auth.uid();
+                </div>
+            </div>
+        </div>
+
+        <div class="step">
+            <span class="step-number">5</span>
+            <h3>Recargar la Aplicación</h3>
+            <div class="step-content">
+                <p>Después de ejecutar el script:</p>
+                <ul>
+                    <li>Recarga la aplicación con <strong>Ctrl+F5</strong> (o Cmd+Shift+R en Mac)</li>
+                    <li>Ve al panel de administración</li>
+                    <li>Intenta editar un grupo nuevamente</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="success">
+            <h2>✅ Resultado Esperado</h2>
+            <p>Después de seguir estos pasos:</p>
+            <ul>
+                <li>Podrás editar grupos sin errores</li>
+                <li>Los cambios se guardarán en Supabase</li>
+                <li>Los cambios persistirán al recargar la página</li>
+            </ul>
+        </div>
+
+        <div class="warning">
+            <h3>🔍 Si el Problema Persiste</h3>
+            <p>Si después de ejecutar el script sigues teniendo problemas:</p>
+            <ul>
+                <li>Abre la consola del navegador (F12)</li>
+                <li>Intenta editar un grupo</li>
+                <li>Copia los mensajes de error que aparecen en la consola</li>
+                <li>Comparte esos mensajes para diagnóstico adicional</li>
+            </ul>
+        </div>
+
+        <div style="margin-top: 40px; padding-top: 30px; border-top: 2px solid #e5e7eb; text-align: center; color: #6b7280;">
+            <p>¿Necesitas más ayuda? Consulta la documentación completa en <code>TROUBLESHOOTING_GROUP_UPDATE_ERROR.md</code></p>
+        </div>
+    </div>
+</body>
+</html>
