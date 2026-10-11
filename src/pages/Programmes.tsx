@@ -3,6 +3,7 @@ import { useApp } from '../contexts/AppContext';
 import { subjects, departments, teacherSubjectGroups } from '../data/seed';
 import { ClipboardList, Edit, X, Save } from 'lucide-react';
 import { Programme } from '../types';
+import { EvaluationInstrumentsTable } from '../components/EvaluationInstrumentsTable';
 
 export const Programmes: React.FC = () => {
   const { currentUser, programmes, updateProgramme } = useApp();
@@ -123,6 +124,11 @@ export const Programmes: React.FC = () => {
                     <p className="text-sm text-gray-600">{prog.complementaryActivities}</p>
                   </div>
                 </div>
+              </div>
+
+              {/* Tabla de Instrumentos de Evaluación */}
+              <div className="border-t border-gray-100 mt-4 pt-4">
+                <EvaluationInstrumentsTable subjectId={prog.subjectId} />
               </div>
             </div>
           );
