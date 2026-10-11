@@ -100,6 +100,7 @@ export interface SpecificCompetency {
   description: string;
   subjectId: string;
   keyCompetencyIds: string[];
+  profileDescriptors?: string[]; // Descriptores del Perfil de Salida
 }
 
 export interface EvaluationCriterion {
@@ -108,6 +109,7 @@ export interface EvaluationCriterion {
   description: string;
   specificCompetencyId: string;
   subjectId: string;
+  weight?: number; // Porcentaje en la calificación final
 }
 
 export interface BasicKnowledge {
@@ -141,6 +143,9 @@ export interface LearningSituation {
   specificCompetencyIds: string[];
   criterionIds: string[];
   basicKnowledgeIds: string[];
+  phases?: string[]; // Fases de la situación de aprendizaje
+  challenge?: string; // Reto principal
+  curricularJustification?: string; // Justificación curricular
 }
 
 export type ActivityType = 'theoretical' | 'practical' | 'individual' | 'cooperative' | 'digital' | 'final_product' | 'recovery';
